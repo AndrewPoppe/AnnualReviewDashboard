@@ -1,0 +1,60 @@
+{
+    "name": "Annual Review Dashboard",
+    "namespace": "YaleREDCap\\AnnualReviewDashboard",
+    "description": "A dashboard for reviewers to manage faculty reviews",
+    "authors": [
+        {
+            "name": "Andrew Poppe",
+            "email": "andrew.poppe@yale.edu",
+            "institution": "Yale Center for Clinical Investigation"
+        }
+    ],
+    "framework-version": 8,
+    "permissions": [],
+    "system-settings": [
+        {
+            "key": "cas-host",
+            "name": "<strong>Full Hostname of your CAS Server</strong>:<br>e.g., secure.its.yale.edu",
+            "required": true,
+            "type": "text"
+        },
+        {
+            "key": "cas-context",
+            "name": "<strong>Context of the CAS Server</strong>:<br>e.g., /cas",
+            "required": true,
+            "type": "text"
+        },
+        {
+            "key": "cas-port",
+            "name": "<strong>Port of your CAS server</strong>:<br>Normally for a https server it's 443",
+            "required": true,
+            "type": "text"
+        },
+        {
+            "key": "cas-server-ca-cert-pem",
+            "name": "<strong>CA cert pem file</strong>:<br>e.g., cacert.pem",
+            "required": true,
+            "type": "file"
+        },
+        {
+            "key": "server-force-https",
+            "name": "<strong>HTTPS Override</strong>:<br>Check this if you experience the CAS server redirecting to http despite your REDCap server using https protocol",
+            "required": false,
+            "type": "checkbox"
+        }
+    ],
+    "links": {
+        "project": [
+            {
+                "name": "Annual Review Dashboard",
+                "key": "dashboard",
+                "icon": "fas fa-tachometer-alt",
+                "url": "dashboard.php?NOAUTH",
+                "show-header-and-footer": false
+            }
+        ]
+    },
+    "no-auth-pages": [
+        "dashboard"
+    ]
+}
