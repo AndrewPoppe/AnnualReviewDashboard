@@ -67,6 +67,26 @@ class AnnualReviewDashboard extends \ExternalModules\AbstractExternalModule {
         return EDOC_PATH . $filename;
     }
 
+    function login() {
+        try {
+            $id = $this->authenticate();
+        }
+        catch (\CAS_GracefullTerminationException $e) {
+            if ($e->getCode() !== 0) {
+                $this->log($e->getMessage());
+            }
+        }
+        catch (\Exception $e) {
+            $this->log($e->getMessage());
+        }
+        finally {
+            //if (empty($id)) {
+            //    $this->log('Could not log in');
+            //}
+            return $id;
+        }
+    }
+
     function getData($id) {
         $params = array(
             "project_id" => $project_id,
@@ -78,7 +98,7 @@ class AnnualReviewDashboard extends \ExternalModules\AbstractExternalModule {
                 "init_rank",
                 "link_to_faculty_survey"
             ),
-            "filterLogic" => '([departmental_leadership] = "18") AND ([faculty_development_annual_questionnaire_2022_complete] = "2") AND ([chairs_comments_for_faculty_development_annual_que_complete] = "0")',
+            "filterLogic" => '([departmental_leadership] = "'.$id.'") AND ([faculty_development_annual_questionnaire_2022_complete] = "2") AND ([chairs_comments_for_faculty_development_annual_que_complete] = "0")',
             "exportAsLabels" => "TRUE"        
         );
         $data = \REDCap::getData($params);
