@@ -41,6 +41,12 @@
             "name": "<strong>HTTPS Override</strong>:<br>Check this if you experience the CAS server redirecting to http despite your REDCap server using https protocol",
             "required": false,
             "type": "checkbox"
+        },
+        {
+            "key": "server-force-http",
+            "name": "<strong>Force HTTP</strong>:<br>Check this if your REDCap server uses http (not https) and CAS isn't working correctly. This does nothing if the <code>HTTPS Override</code> setting above is selected",
+            "required": false,
+            "type": "checkbox"
         }
     ],
     "links": {

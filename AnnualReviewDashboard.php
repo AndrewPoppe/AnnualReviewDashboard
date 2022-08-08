@@ -24,6 +24,7 @@ class AnnualReviewDashboard extends \ExternalModules\AbstractExternalModule {
         $cas_server_ca_cert_id = $this->getSystemSetting("cas-server-ca-cert-pem");
         $cas_server_ca_cert_path = $this->getFile($cas_server_ca_cert_id);
         $server_force_https = $this->getSystemSetting("server-force-https");
+        $server_force_http = $this->getSystemSetting("server-force-http");
 
         // Enable https fix
         if ($server_force_https == 1) {
@@ -31,8 +32,11 @@ class AnnualReviewDashboard extends \ExternalModules\AbstractExternalModule {
             $_SERVER['HTTP_X_FORWARDED_PORT'] = 443;
             $_SERVER['HTTPS'] = 'on';
             $_SERVER['SERVER_PORT'] = 443;
+        } else if ($server_force_http == 1) {
+            $_SERVER['HTTP_X_FORWARDED_PROTO'] = 'http';
+            $_SERVER['HTTPS'] = null;
         }
-        
+         
         // Initialize phpCAS
         \phpCAS::client(CAS_VERSION_2_0, $cas_host, $cas_port, $cas_context);
 
