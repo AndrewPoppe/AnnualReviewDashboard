@@ -140,28 +140,28 @@ class AnnualReviewDashboard extends \ExternalModules\AbstractExternalModule {
         // 7 - final review completed
         switch (strval($status)) {
             case "1":
-                $status_text = "Pending Mentor Review";
+                $status_text = "<span class='fa-solid fa-circle-pause' style='color:grey;'></span> Pending Mentor Review";
                 break;
             case "2":
-                $status_text = "Pending Division Chief Review";
+                $status_text = "<span class='fa-solid fa-circle-pause' style='color:grey;'></span> Pending Division Chief Review";
                 break;
             case "3":
-                $status_text = "Pending Chair Review";
+                $status_text = "<span class='fa-solid fa-circle-pause' style='color:grey;'></span> Pending Chair Review";
                 break;
             case "4":
-                $status_text = "Ready for First Review";
+                $status_text = "<span class='fa-solid fa-circle-exclamation' style='color:tomato;'></span> Ready for Review";
                 break;
             case "5":
-                $status_text = "Ready for First Review";
+                $status_text = "<span class='fa-solid fa-circle-exclamation' style='color:tomato;'></span> Ready for Review";
                 break;
             case "6":
-                $status_text = "Ready for Final Review";
+                $status_text = "<span class='fa-solid fa-circle-exclamation' style='color:tomato;'></span> Ready for Review";
                 break;
             case "7":
-                $status_text = "Final Review Completed";
+                $status_text = "<span class='fa-solid fa-circle-check' style='color:green;'></span> Review Complete";
                 break;
             default:
-                $status_text = "Pending Faculty Submission";
+                $status_text = "<span class='fa-solid fa-circle-pause' style='color:orange;'></span> Pending Faculty Submission";
                 break;
         }
         return $status_text;
@@ -177,7 +177,7 @@ class AnnualReviewDashboard extends \ExternalModules\AbstractExternalModule {
         return $link;
     }
 
-    function getData($id) {
+    function getSubmissionData($id) {
         $params = array(
             "project_id" => $project_id,
             "fields" => array(
@@ -201,6 +201,7 @@ class AnnualReviewDashboard extends \ExternalModules\AbstractExternalModule {
             "exportAsLabels" => "TRUE"        
         );
         $data = \REDCap::getData($params);
+        //$data = $this->getData($params);
         foreach ($data as &$record) {
             $record = $record[$this->getEventId()];
             
@@ -223,8 +224,8 @@ class AnnualReviewDashboard extends \ExternalModules\AbstractExternalModule {
             return;
         }
         ?>
-        <div style="width:75%;">
-        <table id="dashboard_table">
+        <div class="dashboard_container">
+        <table id="dashboard_table" class="table stripe hover row-border">
             <thead><tr>
                 <th>First Name</th>
                 <th>Last Name</th>
@@ -237,17 +238,17 @@ class AnnualReviewDashboard extends \ExternalModules\AbstractExternalModule {
             </tr></thead>
             <?php foreach ($data as $record) { ?>
 
-                <tr>
+                <tr data-status="<?=$record['status']?>">
                     <td><?=\REDCap::escapeHtml($record["init_first_name"])?></td>
                     <td><?=\REDCap::escapeHtml($record["init_last_name"])?></td>
                     <td><?=\REDCap::escapeHtml($record["init_department"])?></td>
                     <td><?=\REDCap::escapeHtml($record["init_ladder_track"])?></td>
                     <td><?=\REDCap::escapeHtml($record["init_rank"])?></td>
                     <td><?=\REDCap::escapeHtml($this->getChoiceLabel('review_type', $record["review_type"]))?></td>
-                    <td><?=\REDCap::escapeHtml($record["status_text"])?></td>
+                    <td><?=$record["status_text"]?></td>
                     <td>
                         <?php if ($record["link"] !== "") { ?>
-                            <a target="_blank" href="<?=\REDCap::escapeHtml($record["link"])?>">link</a>
+                            <a target="_blank" href="<?=\REDCap::escapeHtml($record["link"])?>">Click to Review</a>
                         <?php } ?>
                     </td>
                 </tr>
@@ -257,7 +258,47 @@ class AnnualReviewDashboard extends \ExternalModules\AbstractExternalModule {
         </div>
         <script>
             $(document).ready( function () {
-                $('#dashboard_table').DataTable();
+                $('#dashboard_table').DataTable({
+                    dom: 'rf<"clear">Bti',
+                    stateSave: true,
+                    buttons: [
+                        {
+                            text: 'Show Complete Reviews',
+                            action: function(e, dt, node, config) {
+                                if ($.fn.dataTable.ext.search.length) {
+                                    $.fn.dataTable.ext.search.pop();
+                                    $(this.node()).html('Hide Complete Reviews');
+                                    dt.draw();
+                                } else {
+                                    $.fn.dataTable.ext.search.push(
+                                        function(settings, data, dataIndex) {
+                                            return $(dt.row(dataIndex).node()).attr('data-status') != 7;
+                                        }
+                                    );
+                                    $(this.node()).text('Show Complete Reviews');
+                                    dt.draw();
+                                }
+                            }
+                        },
+                        'colvis',
+                        {
+                            text: 'Refresh Table',
+                            action: function() {
+                                window.location.reload();
+                            }
+                        }
+                    ],
+                    initComplete: function (settings, json) {
+                        const dt = this.DataTable();
+                        $.fn.dataTable.ext.search.push(
+                            function(settings, data, dataIndex) {
+                                return $(dt.row(dataIndex).node()).attr('data-status') != 7;
+                            }
+                        );
+                        dt.draw();
+                    },
+                    order: [[6, 'asc']]
+                });
             } );
         </script>
         <?php
