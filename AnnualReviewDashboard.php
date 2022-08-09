@@ -7,14 +7,16 @@ namespace YaleREDCap\AnnualReviewDashboard;
  * 
  * @author Andrew Poppe
  */
-class AnnualReviewDashboard extends \ExternalModules\AbstractExternalModule {
-/**
+class AnnualReviewDashboard extends \ExternalModules\AbstractExternalModule
+{
+    /**
      * Initiate CAS authentication
      * 
      * 
      * @return string|boolean username of authenticated user (false if not authenticated)
      */
-    function authenticate() {
+    function authenticate()
+    {
 
         require_once __DIR__ . '/vendor/jasig/phpcas/CAS.php';
 
@@ -36,7 +38,7 @@ class AnnualReviewDashboard extends \ExternalModules\AbstractExternalModule {
             $_SERVER['HTTP_X_FORWARDED_PROTO'] = 'http';
             $_SERVER['HTTPS'] = null;
         }
-         
+
         // Initialize phpCAS
         \phpCAS::client(CAS_VERSION_2_0, $cas_host, $cas_port, $cas_context);
 
@@ -49,7 +51,7 @@ class AnnualReviewDashboard extends \ExternalModules\AbstractExternalModule {
 
         // force CAS authentication
         \phpCAS::forceAuthentication();
-        
+
         // Return authenticated username
         return \phpCAS::getUser();
     }
@@ -62,7 +64,8 @@ class AnnualReviewDashboard extends \ExternalModules\AbstractExternalModule {
      * 
      * @return string path to file in edoc folder
      */
-    private function getFile(string $edocId) {
+    private function getFile(string $edocId)
+    {
         if ($edocId === NULL) {
             return "";
         }
@@ -71,19 +74,17 @@ class AnnualReviewDashboard extends \ExternalModules\AbstractExternalModule {
         return EDOC_PATH . $filename;
     }
 
-    function login() {
+    function login()
+    {
         try {
             $id = $this->authenticate();
-        }
-        catch (\CAS_GracefullTerminationException $e) {
+        } catch (\CAS_GracefullTerminationException $e) {
             if ($e->getCode() !== 0) {
                 $this->log($e->getMessage());
             }
-        }
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
             $this->log($e->getMessage());
-        }
-        finally {
+        } finally {
             //if (empty($id)) {
             //    $this->log('Could not log in');
             //}
@@ -91,7 +92,8 @@ class AnnualReviewDashboard extends \ExternalModules\AbstractExternalModule {
         }
     }
 
-    function getStatus($id, $record) {
+    function getStatus($id, &$record)
+    {
         // 0 - pending faculty submission (initial form completed only)
         // 1 - pending mentor review
         // 2 - pending division chief review
@@ -133,7 +135,8 @@ class AnnualReviewDashboard extends \ExternalModules\AbstractExternalModule {
         return $status;
     }
 
-    function getStatusText($status) {
+    function getStatusText($status)
+    {
         // 0 - pending faculty submission (initial form completed only)
         // 1 - pending mentor review
         // 2 - pending division chief review
@@ -171,102 +174,192 @@ class AnnualReviewDashboard extends \ExternalModules\AbstractExternalModule {
         return $status_text;
     }
 
-    function getLink($record) {
+    function binaryToString($binary)
+    {
+        $binaries = explode(' ', $binary);
+
+        $string = null;
+        foreach ($binaries as $binary) {
+            $string .= pack('H*', dechex(bindec($binary)));
+        }
+
+        return $string;
+    }
+
+    function getLink($record_id, $status)
+    {
         $link = "";
-        if ($record["status"] == 6) {
-            $link = $record["link_to_faculty_survey"];
-        } else if ($record["status"] == 4 || $record["status"] == 5) {
-            $link = $record["link_to_faculty_survey_first_stage"];
+        if ($status == 6) {
+            $survey_link = \REDCap::getSurveyLink($record_id, "chairs_comments_for_faculty_development_annual_que");
+            $link = '<a target="_blank" href="' . $survey_link . '">Click to Review</a>';
+            //$link = $record["link_to_faculty_survey"];
+        } else if ($status == 4 || $status == 5) {
+            $survey_link = \REDCap::getSurveyLink($record_id, "first_stage_review_comments_for_faculty_developmen");
+            $link = '<a target="_blank" href="' . $survey_link . '">Click to Review</a>';
+            //$link = $record["link_to_faculty_survey_first_stage"];
+        } else if ($status == 7) {
+            //$pdfcontent = \REDCap::getPDF($record_id, "chairs_comments_for_faculty_development_annual_que");
+            //var_dump(($pdfcontent));
+            $link = "<a href='" . $this->getUrl("download.php?record_id=" . $record_id, true) . "' target='_blank'>Download Review</button>";
         }
         return $link;
     }
 
-    function getSubmissionData($id) {
-        $params = array(
-            "project_id" => $project_id,
-            "fields" => array(
-                "init_first_name", 
-                "init_last_name",
-                "init_department",
-                "init_ladder_track",
-                "init_rank",
-                "review_type",
-                "mentor_name",
-                "division_chief_name",
-                "departmental_leadership",
-                "faculty_development_annual_questionnaire_2022_complete",
-                "first_stage_review_comments_for_faculty_developmen_complete",
-                "chairs_comments_for_faculty_development_annual_que_complete",
-                "link_to_faculty_survey",
-                "link_to_faculty_survey_first_stage"
-            ),
-            //"filterLogic" => '([departmental_leadership] = "'.$id.'") AND ([faculty_development_annual_questionnaire_2022_complete] = "2") AND ([chairs_comments_for_faculty_development_annual_que_complete] = "0")',
-            "filterLogic" => '([departmental_leadership] = "'.$id.'") OR ([mentor_name] = "'.$id.'") OR ([division_chief_name] = "'.$id.'")',
-            "exportAsLabels" => "TRUE"        
-        );
-        $data = \REDCap::getData($params);
-        //$data = $this->getData($params);
-        foreach ($data as &$record) {
-            $record = $record[$this->getEventId()];
-            
-            //$record["init_first_name"] = $event["init_first_name"] ;
-            //$record["init_last_name"] = $event["init_last_name"];
-            $record["init_department"] = $this->getChoiceLabel("init_department", $record["init_department"]);
-            $record["init_ladder_track"] = $this->getChoiceLabel("init_ladder_track", $record["init_ladder_track"]);
-            $record["init_rank"] = $this->getChoiceLabel("init_rank", $record["init_rank"]);
-            $record["status"] = $this->getStatus($id, $record);
-            $record["link"] = $this->getLink($record);
-            $record["status_text"] = $this->getStatusText($record["status"]);
-            //$record["link_to_faculty_survey"] = $event["link_to_faculty_survey"];
+    /**
+     * @param mixed $id - the primary id of the user
+     * 
+     * @return array of netids that the primary id has access to view (including the primary)
+     */
+    function getValidIDs($id)
+    {
+        $ids = array($id);
+        $aliases = $this->getProjectSetting("parent");
+        $children = $this->getProjectSetting("child");
+        foreach ($aliases as $alias_n => $alias) {
+            $these_children = $children[$alias_n];
+            foreach ($these_children as $this_child) {
+                if ($id == $this_child) {
+                    array_push($ids, $alias);
+                }
+            }
         }
-        return $data;
+        return $ids;
     }
 
-    function displayDataTable($data) {
+    function getSubmissionData($id)
+    {
+        $ids = $this->getValidIDs($id);
+        $alldata = array();
+
+        $labels = array(
+            "init_department" => $this->getChoiceLabels("init_department"),
+            "init_ladder_track" => $this->getChoiceLabels("init_ladder_track"),
+            "init_rank" => $this->getChoiceLabels("init_rank"),
+            "review_type" => $this->getChoiceLabels("review_type")
+        );
+
+        foreach ($ids as $id) {
+
+            $filterLogic = "[departmental_leadership] = '" . $id . "'";
+            $filterLogic .= " OR [mentor_name] = '" . $id . "'";
+            $filterLogic .= " OR [division_chief_name] = '" . $id . "'";
+            $filterLogic .= " OR [mentor_committee_1] = '" . $id . "'";
+            $filterLogic .= " OR [mentor_committee_2] = '" . $id . "'";
+            $filterLogic .= " OR [mentor_committee_3] = '" . $id . "'";
+            $filterLogic .= " OR [mentor_committee_4] = '" . $id . "'";
+            $filterLogic .= " OR [mentor_committee_5] = '" . $id . "'";
+            $params = array(
+                "project_id" => $project_id,
+                "fields" => array(
+                    "init_first_name",
+                    "init_last_name",
+                    "init_department",
+                    "init_ladder_track",
+                    "init_rank",
+                    "review_type",
+                    "mentor_name",
+                    "mentor_committee_1",
+                    "mentor_committee_2",
+                    "mentor_committee_3",
+                    "mentor_committee_4",
+                    "mentor_committee_5",
+                    "division_chief_name",
+                    "departmental_leadership",
+                    "faculty_development_annual_questionnaire_2022_complete",
+                    "first_stage_review_comments_for_faculty_developmen_complete",
+                    "chairs_comments_for_faculty_development_annual_que_complete",
+                    "link_to_faculty_survey",
+                    "link_to_faculty_survey_first_stage"
+                ),
+                //"filterLogic" => '([departmental_leadership] = "'.$id.'") AND ([faculty_development_annual_questionnaire_2022_complete] = "2") AND ([chairs_comments_for_faculty_development_annual_que_complete] = "0")',
+                "filterLogic" => $filterLogic,
+                "exportAsLabels" => true
+            );
+            $data = \REDCap::getData($params);
+            //$data = $this->getData($params);
+            foreach ($data as $recordid => $record) {
+                $eid = $this->getEventId();
+                //$newRecord = $record;
+                $newRecord = $record[$eid];
+
+                //$record["init_first_name"] = $event["init_first_name"] ;
+                //$record["init_last_name"] = $event["init_last_name"];
+                //$newRecord["record_id"] = $recordid;
+                //$department = $this->getChoiceLabel("init_department", $newRecord["init_department"]);
+                ///$init_ladder_track = $this->getChoiceLabel("init_ladder_track", $newRecord["init_ladder_track"]);
+                //$init_rank = $this->getChoiceLabel("init_rank", $newRecord["init_rank"]);
+                $init_department = $labels["init_department"][$newRecord["init_department"]];
+                $init_ladder_track = $labels["init_ladder_track"][$newRecord["init_ladder_track"]];
+                $init_rank = $labels["init_rank"][$newRecord["init_rank"]];
+                $review_type = $labels["review_type"][$newRecord["review_type"]];
+
+                $status = $this->getStatus($id, $newRecord);
+                $link = $this->getLink($recordid, $status);
+                $status_text = $this->getStatusText($status);
+
+                $data[$recordid] = array(
+                    "record_id" => $recordid,
+                    "init_first_name" => $newRecord["init_first_name"],
+                    "init_last_name" => $newRecord["init_last_name"],
+                    "init_department" => $init_department,
+                    "init_ladder_track" => $init_ladder_track,
+                    "init_rank" => $init_rank,
+                    "review_type" => $review_type,
+                    "link" => $link,
+                    "status" => $status,
+                    "status_text" => $status_text
+                );
+            }
+            $alldata = array_unique(array_merge($alldata, $data), SORT_REGULAR);
+        }
+        return $alldata;
+    }
+
+    function displayDataTable($data)
+    {
         if (empty($data)) {
             echo "No data yet";
             return;
         }
-        ?>
+?>
         <div class="dashboard_container">
-        <table id="dashboard_table" class="table stripe hover row-border">
-            <thead><tr>
-                <th>First Name</th>
-                <th>Last Name</th>
-                <th>Department</th>
-                <th>Ladder Track</th>
-                <th>Rank</th>
-                <th>Review Type</th>
-                <th>Status</th>
-                <th>Survey Link</th>
-            </tr></thead>
-            <?php foreach ($data as $record) { ?>
+            <table id="dashboard_table" class="table stripe hover row-border">
+                <thead>
+                    <tr>
+                        <th>First Name</th>
+                        <th>Last Name</th>
+                        <th>Department</th>
+                        <th>Ladder Track</th>
+                        <th>Rank</th>
+                        <th>Review Type</th>
+                        <th>Status</th>
+                        <th>Survey Link</th>
+                    </tr>
+                </thead>
+                <?php foreach ($data as $record) { ?>
 
-                <tr data-status="<?=$record['status']?>">
-                    <td><?=\REDCap::escapeHtml($record["init_first_name"])?></td>
-                    <td><?=\REDCap::escapeHtml($record["init_last_name"])?></td>
-                    <td><?=\REDCap::escapeHtml($record["init_department"])?></td>
-                    <td><?=\REDCap::escapeHtml($record["init_ladder_track"])?></td>
-                    <td><?=\REDCap::escapeHtml($record["init_rank"])?></td>
-                    <td><?=\REDCap::escapeHtml($this->getChoiceLabel('review_type', $record["review_type"]))?></td>
-                    <td><?=$record["status_text"]?></td>
-                    <td>
-                        <?php if ($record["link"] !== "") { ?>
-                            <a target="_blank" href="<?=\REDCap::escapeHtml($record["link"])?>">Click to Review</a>
-                        <?php } ?>
-                    </td>
-                </tr>
-                
-            <?php } ?>
-        </table>
+                    <tr data-status="<?= $record['status'] ?>" data-record="<?= $record["record_id"] ?>">
+                        <td><?= \REDCap::escapeHtml($record["init_first_name"]) ?></td>
+                        <td><?= \REDCap::escapeHtml($record["init_last_name"]) ?></td>
+                        <td><?= \REDCap::escapeHtml($record["init_department"]) ?></td>
+                        <td><?= \REDCap::escapeHtml($record["init_ladder_track"]) ?></td>
+                        <td><?= \REDCap::escapeHtml($record["init_rank"]) ?></td>
+                        <td><?= \REDCap::escapeHtml($record["review_type"]) ?></td>
+                        <td><?= $record["status_text"] ?></td>
+                        <td>
+                            <?= $record["link"] ?>
+                        </td>
+                    </tr>
+
+                <?php } ?>
+            </table>
         </div>
         <script>
-            $(document).ready( function () {
+            $(document).ready(function() {
                 $('#dashboard_table').DataTable({
                     dom: 'rf<"clear">Bti',
                     stateSave: true,
-                    buttons: [
-                        {
+                    buttons: [{
                             text: 'Show Complete Reviews',
                             action: function(e, dt, node, config) {
                                 if ($.fn.dataTable.ext.search.length) {
@@ -292,7 +385,7 @@ class AnnualReviewDashboard extends \ExternalModules\AbstractExternalModule {
                             }
                         }
                     ],
-                    initComplete: function (settings, json) {
+                    initComplete: function(settings, json) {
                         const dt = this.DataTable();
                         $.fn.dataTable.ext.search.push(
                             function(settings, data, dataIndex) {
@@ -301,13 +394,16 @@ class AnnualReviewDashboard extends \ExternalModules\AbstractExternalModule {
                         );
                         dt.draw();
                     },
-                    order: [[6, 'asc']]
+                    order: [
+                        [6, 'desc']
+                    ],
+                    paging: false,
+                    scrollY: `calc(100vh - 200px)`,
+                    scrollCollapse: true
                 });
-            } );
+            });
         </script>
-        <?php
+<?php
         //var_dump($data);
     }
-
 }
-

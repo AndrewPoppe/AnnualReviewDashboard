@@ -11,6 +11,30 @@
     ],
     "framework-version": 8,
     "permissions": [],
+    "project-settings": [
+        {
+            "key": "aliases",
+            "name": "<strong>Aliases</strong>: identify users who should be able to access another user's dashboard",
+            "required": false,
+            "type": "sub_settings",
+            "repeatable": true,
+            "sub_settings": [
+                {
+                    "key": "parent",
+                    "name": "<strong>Original NetID</strong>: the NetID of the person whose dashboard will be shared with the alias",
+                    "required": true,
+                    "type": "text"
+                },
+                {
+                    "key": "child",
+                    "name": "<strong>Alias NetID</strong>: the NetID of the person who needs access to the Original NetID's dashboard",
+                    "required": false,
+                    "type": "text",
+                    "repeatable": true
+                }
+            ]
+        }
+    ],
     "system-settings": [
         {
             "key": "cas-host",
@@ -61,6 +85,7 @@
         ]
     },
     "no-auth-pages": [
-        "dashboard"
+        "dashboard",
+        "download"
     ]
 }
