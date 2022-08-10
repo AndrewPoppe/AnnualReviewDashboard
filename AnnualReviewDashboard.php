@@ -186,7 +186,7 @@ class AnnualReviewDashboard extends \ExternalModules\AbstractExternalModule
         return $string;
     }
 
-    function getLink($record_id, $status)
+    function getLink($record_id, $status, $id)
     {
         $link = "";
         if ($status == 6) {
@@ -200,7 +200,7 @@ class AnnualReviewDashboard extends \ExternalModules\AbstractExternalModule
         } else if ($status == 7) {
             //$pdfcontent = \REDCap::getPDF($record_id, "chairs_comments_for_faculty_development_annual_que");
             //var_dump(($pdfcontent));
-            $link = "<a href='" . $this->getUrl("download.php?record_id=" . $record_id, true) . "' target='_blank'>Download Review</button>";
+            $link = "<a href='" . $this->getUrl("download.php?record_id=" . $record_id . "&id=" . $id, true) . "' target='_blank'>Download Review</button>";
         }
         return $link;
     }
@@ -294,7 +294,7 @@ class AnnualReviewDashboard extends \ExternalModules\AbstractExternalModule
                 $review_type = $labels["review_type"][$newRecord["review_type"]];
 
                 $status = $this->getStatus($id, $newRecord);
-                $link = $this->getLink($recordid, $status);
+                $link = $this->getLink($recordid, $status, $id);
                 $status_text = $this->getStatusText($status);
 
                 $data[$recordid] = array(
