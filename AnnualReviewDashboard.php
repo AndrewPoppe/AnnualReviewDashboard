@@ -180,15 +180,13 @@ class AnnualReviewDashboard extends \ExternalModules\AbstractExternalModule
         if ($status == 6) {
             $survey_link = \REDCap::getSurveyLink($record_id, "chairs_comments_for_faculty_development_annual_que");
             $link = '<a target="_blank" href="' . $survey_link . '">Click to Review</a>';
-            //$link = $record["link_to_faculty_survey"];
         } else if ($status == 4 || $status == 5) {
             $survey_link = \REDCap::getSurveyLink($record_id, "first_stage_review_comments_for_faculty_developmen");
             $link = '<a target="_blank" href="' . $survey_link . '">Click to Review</a>';
-            //$link = $record["link_to_faculty_survey_first_stage"];
         } else if ($status == 7) {
-            //$pdfcontent = \REDCap::getPDF($record_id, "chairs_comments_for_faculty_development_annual_que");
-            //var_dump(($pdfcontent));
-            $link = "<a href='" . $this->getUrl("download.php?record_id=" . $record_id . "&id=" . $id, true) . "' target='_blank'>Download Review</button>";
+            $link = "<a href='" . $this->getUrl("download.php?record_id=" . $record_id . "&id=" . $id . "&type=2", true) . "' target='_blank'>Download Review</button>";
+        } else if ($status == 3) {
+            $link = "<a href='" . $this->getUrl("download.php?record_id=" . $record_id . "&id=" . $id . "&type=1", true) . "' target='_blank'>Download Review</button>";
         }
         return $link;
     }

@@ -21,11 +21,24 @@ if (!isset($record_id)) {
     exit;
 }
 
-function getPdfData($record_id, $id)
+$type = filter_input(INPUT_GET, 'type');
+if (!isset($type)) {
+    exit;
+}
+
+function getPdfData($record_id, $id, $type)
+{
+    if ($type == 1) {
+        getFirstStagePDF($record_id, $id);
+    } else if ($type == 2) {
+        getFinalPDF($record_id, $id);
+    }
+}
+
+function getFirstStagePDF($record_id, $id)
 {
     $filterLogic = "([record_id] = '" . $record_id . "') AND (";
-    $filterLogic .= " [departmental_leadership] = '" . $id . "'";
-    $filterLogic .= " OR [mentor_name] = '" . $id . "'";
+    $filterLogic .= " [mentor_name] = '" . $id . "'";
     $filterLogic .= " OR [division_chief_name] = '" . $id . "'";
     $filterLogic .= " OR [mentor_committee_1] = '" . $id . "'";
     $filterLogic .= " OR [mentor_committee_2] = '" . $id . "'";
@@ -38,7 +51,31 @@ function getPdfData($record_id, $id)
         "fields" => array(
             "init_last_name"
         ),
-        //"filterLogic" => '([record_id] = "' . $record_id . '") AND (([departmental_leadership] = "' . $id . '") OR ([mentor_name] = "' . $id . '") OR ([division_chief_name] = "' . $id . '"))'
+        "filterLogic" => $filterLogic
+    );
+    $data = \REDCap::getData($params);
+    if (!empty($data)) {
+        $pdfcontent = \REDCap::getPDF($record_id, "first_stage_review_comments_for_faculty_developmen");
+
+        // Set PHP headers to output the PDF to be downloaded as a file in the web browser
+        header('Content-type: application/pdf');
+        header('Content-disposition: attachment; filename="AnnualReview.pdf"');
+
+        // Output the PDF content
+        print $pdfcontent;
+    } else {
+        print "You do not have permission to view that file.";
+    }
+}
+
+function getFinalPDF($record_id, $id)
+{
+    $filterLogic = "[record_id] = '" . $record_id . "' AND [departmental_leadership] = '" . $id . "'";
+    $params = array(
+        "project_id" => $project_id,
+        "fields" => array(
+            "init_last_name"
+        ),
         "filterLogic" => $filterLogic
     );
     $data = \REDCap::getData($params);
@@ -57,4 +94,4 @@ function getPdfData($record_id, $id)
 }
 
 
-$data = getPdfData($record_id, $id);
+$data = getPdfData($record_id, $id, $type);
