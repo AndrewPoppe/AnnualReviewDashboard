@@ -97,7 +97,7 @@ class AnnualReviewDashboard extends \ExternalModules\AbstractExternalModule
         // 0 - pending faculty submission (initial form completed only)
         // 1 - pending mentor review
         // 2 - pending division chief review
-        // 3 - pending chair review
+        // 3 - pending chair review (but display it as completed to 1st stage reviewer)
         // 4 - ready for mentor review (show first stage link)
         // 5 - ready for division chief review (show first stage link)
         // 6 - ready for final review (show final link)
@@ -140,7 +140,7 @@ class AnnualReviewDashboard extends \ExternalModules\AbstractExternalModule
         // 0 - pending faculty submission (initial form completed only)
         // 1 - pending mentor review
         // 2 - pending division chief review
-        // 3 - pending chair review
+        // 3 - pending chair review (but display it as completed to 1st stage reviewer)
         // 4 - ready for mentor review (show first stage link)
         // 5 - ready for division chief review (show first stage link)
         // 6 - ready for final review (show final link)
@@ -153,7 +153,7 @@ class AnnualReviewDashboard extends \ExternalModules\AbstractExternalModule
                 $status_text = "<span class='fa-solid fa-circle-pause' style='color:grey;'></span> Pending Division Chief Review";
                 break;
             case "3":
-                $status_text = "<span class='fa-solid fa-circle-pause' style='color:grey;'></span> Pending Chair Review";
+                $status_text = "<span class='fa-solid fa-circle-check' style='color:green;'></span> Review Complete";
                 break;
             case "4":
                 $status_text = "<span class='fa-solid fa-circle-exclamation' style='color:tomato;'></span> Ready for Review";
@@ -172,18 +172,6 @@ class AnnualReviewDashboard extends \ExternalModules\AbstractExternalModule
                 break;
         }
         return $status_text;
-    }
-
-    function binaryToString($binary)
-    {
-        $binaries = explode(' ', $binary);
-
-        $string = null;
-        foreach ($binaries as $binary) {
-            $string .= pack('H*', dechex(bindec($binary)));
-        }
-
-        return $string;
     }
 
     function getLink($record_id, $status, $id)
@@ -369,7 +357,8 @@ class AnnualReviewDashboard extends \ExternalModules\AbstractExternalModule
                                 } else {
                                     $.fn.dataTable.ext.search.push(
                                         function(settings, data, dataIndex) {
-                                            return $(dt.row(dataIndex).node()).attr('data-status') != 7;
+                                            $status = $(dt.row(dataIndex).node()).attr('data-status');
+                                            return $status != 3 && $status != 7;
                                         }
                                     );
                                     $(this.node()).text('Show Complete Reviews');
@@ -389,7 +378,8 @@ class AnnualReviewDashboard extends \ExternalModules\AbstractExternalModule
                         const dt = this.DataTable();
                         $.fn.dataTable.ext.search.push(
                             function(settings, data, dataIndex) {
-                                return $(dt.row(dataIndex).node()).attr('data-status') != 7;
+                                $status = $(dt.row(dataIndex).node()).attr('data-status');
+                                return $status != 3 && $status != 7;
                             }
                         );
                         dt.draw();
