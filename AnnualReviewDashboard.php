@@ -228,6 +228,15 @@ class AnnualReviewDashboard extends \ExternalModules\AbstractExternalModule
         return $ids;
     }
 
+    function getReviewType($review_type_raw, $id, $chair)
+    {
+        if ($id != $chair || $review_type_raw == "One Stage") {
+            return $review_type_raw;
+        } else {
+            return "Two Stage";
+        }
+    }
+
     function getSubmissionData($id)
     {
         $ids = $this->getValidIDs($id);
@@ -285,7 +294,8 @@ class AnnualReviewDashboard extends \ExternalModules\AbstractExternalModule
                 $init_department = $labels["init_department"][$newRecord["init_department"]];
                 $init_ladder_track = $labels["init_ladder_track"][$newRecord["init_ladder_track"]];
                 $init_rank = $labels["init_rank"][$newRecord["init_rank"]];
-                $review_type = $labels["review_type"][$newRecord["review_type"]];
+                $review_type_raw = $labels["review_type"][$newRecord["review_type"]];
+                $review_type = $this->getReviewType($review_type_raw, $id, strtolower($newRecord["departmental_leadership"]));
 
                 $status = $this->getStatus($id, $newRecord);
                 $link = $this->getLink($recordid, $status, $id);
