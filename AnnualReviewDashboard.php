@@ -102,16 +102,26 @@ class AnnualReviewDashboard extends \ExternalModules\AbstractExternalModule
         // 5 - ready for division chief review (show first stage link)
         // 6 - ready for final review (show final link)
         // 7 - final review completed
+        // 8 - pending mentorship committee review
+        // 9 - ready for mentorship committee review (show first stage link)
         $chair_completed = $record["chairs_comments_for_faculty_development_annual_que_complete"] == 2;
         $faculty_completed = $record["faculty_development_annual_questionnaire_2022_complete"] == 2;
         $first_stage_complete = $record["first_stage_review_comments_for_faculty_developmen_complete"] == 2;
         $review_type = $record["review_type"];
-        $mentor = $record["mentor_name"];
-        $division_chief = $record["division_chief_name"];
-        $chair = $record["departmental_leadership"];
+        $mentor = strtolower($record["mentor_name"]);
+        $division_chief = strtolower($record["division_chief_name"]);
+        $chair = strtolower($record["departmental_leadership"]);
+        $mentorship_committee = [
+            strtolower($record["mentor_committee_1"]),
+            strtolower($record["mentor_committee_2"]),
+            strtolower($record["mentor_committee_3"]),
+            strtolower($record["mentor_committee_4"]),
+            strtolower($record["mentor_committee_5"])
+        ];
 
         $userIsMentor = $mentor == $id;
         $userIsDivisionChief = $division_chief == $id;
+        $userOnCommittee = in_array($id, $mentorship_committee, true);
         $userIsChair = $chair == $id;
 
         $status = 0;
@@ -125,12 +135,16 @@ class AnnualReviewDashboard extends \ExternalModules\AbstractExternalModule
             $status = 5;
         } else if ($review_type == 4 && $userIsMentor && !$first_stage_complete) {
             $status = 4;
+        } else if ($review_type == 2 && $userOnCommittee && !$first_stage_complete) {
+            $status = 9;
         } else if ($first_stage_complete || $review_type == 1) {
             $status = 3;
         } else if ($review_type == 3) {
             $status = 2;
         } else if ($review_type == 4) {
             $status = 1;
+        } else if ($review_type == 2) {
+            $status = 8;
         }
         return $status;
     }
@@ -145,6 +159,8 @@ class AnnualReviewDashboard extends \ExternalModules\AbstractExternalModule
         // 5 - ready for division chief review (show first stage link)
         // 6 - ready for final review (show final link)
         // 7 - final review completed
+        // 8 - pending mentorship committee review
+        // 9 - ready for mentorship committee review (show first stage link)
         switch (strval($status)) {
             case "1":
                 $status_text = "<span class='fa-solid fa-circle-pause' style='color:grey;'></span> Pending Mentor Review";
@@ -156,16 +172,16 @@ class AnnualReviewDashboard extends \ExternalModules\AbstractExternalModule
                 $status_text = "<span class='fa-solid fa-circle-check' style='color:green;'></span> Review Complete";
                 break;
             case "4":
-                $status_text = "<span class='fa-solid fa-circle-exclamation' style='color:tomato;'></span> Ready for Review";
-                break;
             case "5":
-                $status_text = "<span class='fa-solid fa-circle-exclamation' style='color:tomato;'></span> Ready for Review";
-                break;
             case "6":
+            case "9":
                 $status_text = "<span class='fa-solid fa-circle-exclamation' style='color:tomato;'></span> Ready for Review";
                 break;
             case "7":
                 $status_text = "<span class='fa-solid fa-circle-check' style='color:green;'></span> Review Complete";
+                break;
+            case "8":
+                $status_text = "<span class='fa-solid fa-circle-pause' style='color:grey;'></span> Pending Mentorship Committee Review";
                 break;
             default:
                 $status_text = "<span class='fa-solid fa-circle-pause' style='color:orange;'></span> Pending Faculty Submission";
@@ -179,10 +195,10 @@ class AnnualReviewDashboard extends \ExternalModules\AbstractExternalModule
         $link = "";
         if ($status == 6) {
             $survey_link = \REDCap::getSurveyLink($record_id, "chairs_comments_for_faculty_development_annual_que");
-            $link = '<a target="_blank" href="' . $survey_link . '">Click to Review</a>';
-        } else if ($status == 4 || $status == 5) {
+            $link = '<a target="_blank" href="' . $survey_link . '">Start Review</a>';
+        } else if ($status == 4 || $status == 5 || $status == 9) {
             $survey_link = \REDCap::getSurveyLink($record_id, "first_stage_review_comments_for_faculty_developmen");
-            $link = '<a target="_blank" href="' . $survey_link . '">Click to Review</a>';
+            $link = '<a target="_blank" href="' . $survey_link . '">Start Review</a>';
         } else if ($status == 7) {
             $link = "<a href='" . $this->getUrl("download.php?record_id=" . $record_id . "&id=" . $id . "&type=2", true) . "' target='_blank'>Download Review</button>";
         } else if ($status == 3) {
@@ -205,7 +221,7 @@ class AnnualReviewDashboard extends \ExternalModules\AbstractExternalModule
             $these_children = $children[$alias_n];
             foreach ($these_children as $this_child) {
                 if ($id == $this_child) {
-                    array_push($ids, $alias);
+                    array_push($ids, strtolower($alias));
                 }
             }
         }
@@ -319,7 +335,7 @@ class AnnualReviewDashboard extends \ExternalModules\AbstractExternalModule
                         <th>Rank</th>
                         <th>Review Type</th>
                         <th>Status</th>
-                        <th>Survey Link</th>
+                        <th>Link</th>
                     </tr>
                 </thead>
                 <?php foreach ($data as $record) { ?>

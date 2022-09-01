@@ -109,6 +109,5 @@ $id = strtolower($id);
 
         $data = $module->getSubmissionData($id);
         $module->displayDataTable($data);
-
         ?>
     </div>
