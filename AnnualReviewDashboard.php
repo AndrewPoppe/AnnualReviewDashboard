@@ -273,23 +273,15 @@ class AnnualReviewDashboard extends \ExternalModules\AbstractExternalModule
                     "link_to_faculty_survey",
                     "link_to_faculty_survey_first_stage"
                 ),
-                //"filterLogic" => '([departmental_leadership] = "'.$id.'") AND ([faculty_development_annual_questionnaire_2022_complete] = "2") AND ([chairs_comments_for_faculty_development_annual_que_complete] = "0")',
                 "filterLogic" => $filterLogic,
                 "exportAsLabels" => true
             );
             $data = \REDCap::getData($params);
-            //$data = $this->getData($params);
+
             foreach ($data as $recordid => $record) {
                 $eid = $this->getEventId();
-                //$newRecord = $record;
                 $newRecord = $record[$eid];
 
-                //$record["init_first_name"] = $event["init_first_name"] ;
-                //$record["init_last_name"] = $event["init_last_name"];
-                //$newRecord["record_id"] = $recordid;
-                //$department = $this->getChoiceLabel("init_department", $newRecord["init_department"]);
-                ///$init_ladder_track = $this->getChoiceLabel("init_ladder_track", $newRecord["init_ladder_track"]);
-                //$init_rank = $this->getChoiceLabel("init_rank", $newRecord["init_rank"]);
                 $init_department = $labels["init_department"][$newRecord["init_department"]];
                 $init_ladder_track = $labels["init_ladder_track"][$newRecord["init_ladder_track"]];
                 $init_rank = $labels["init_rank"][$newRecord["init_rank"]];
@@ -408,6 +400,5 @@ class AnnualReviewDashboard extends \ExternalModules\AbstractExternalModule
             });
         </script>
 <?php
-        //var_dump($data);
     }
 }

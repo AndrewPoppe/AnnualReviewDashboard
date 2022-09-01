@@ -102,7 +102,7 @@ $id = strtolower($id);
         <hr class="header_line">
         <h3 class="header_h3">Yale School of Medicine Annual Review Dashboard</h3>
         <em>You may access any outstanding reviews assigned to you below. The use of this dashboard is strictly limited to authorized individuals, and you are not permitted to share files or any embedded content with other individuals.</em>
-        <p style="font-size:small;">If you have comments, questions, or concerns, please reach out to <a href="mailto:opssd@yale.edu">opssd@yale.edu</a>.</p>
+        <p style="font-size:small;">If you have comments, questions, or concerns, please reach out to <a href="mailto:fdaq@yale.edu">fdaq@yale.edu</a>.</p>
         <hr class="header_line">
 
         <?php
