@@ -278,9 +278,7 @@ class AnnualReviewDashboard extends \ExternalModules\AbstractExternalModule
                     "departmental_leadership",
                     "faculty_development_annual_questionnaire_2022_complete",
                     "first_stage_review_comments_for_faculty_developmen_complete",
-                    "chairs_comments_for_faculty_development_annual_que_complete",
-                    "link_to_faculty_survey",
-                    "link_to_faculty_survey_first_stage"
+                    "chairs_comments_for_faculty_development_annual_que_complete"
                 ),
                 "filterLogic" => $filterLogic,
                 "exportAsLabels" => true
