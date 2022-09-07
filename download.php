@@ -1,14 +1,6 @@
 <?php
 
-// TODO: REMOVE THIS FOR PRODUCTION!!!
-// ONLY USE CAS
-$url_id = filter_input(INPUT_GET, 'id');
-
-if (isset($url_id)) {
-    $id = $url_id;
-} else {
-    $id = $module->login();
-}
+$id = $module->login();
 
 if ($id == FALSE) {
     exit;

@@ -1,12 +1,6 @@
 <?php
 
-$url_id = filter_input(INPUT_GET, 'id');
-
-if (isset($url_id)) {
-    $id = $url_id;
-} else {
-    $id = $module->login();
-}
+$id = $module->login();
 
 if ($id == FALSE) {
     exit;
@@ -72,29 +66,9 @@ $id = strtolower($id);
             font-weight: bold;
         }
     </style>
-    <script>
-        window.getNetID = function() {
-            let retVal = prompt('Enter the new NetID:');
-            if (retVal) {
-                let s = window.location.search.replace(/&id=.*/, '');
-                s = s + '&id=' + retVal;
-                window.location.search = s;
-            }
-        }
-        console.log('loaded');
-    </script>
 </head>
 
 <body>
-
-    <div style="background-color:bisque; border: 1px solid burlywood; margin: 5px; padding-left: 10px; padding-top: 10px;">
-        <p>
-            Current NetID: <strong><?= $id ?></strong>
-            <br>
-            Click here to use a different NetID: <input type='button' onclick='window.getNetID();' value='Click Here'></input>
-        </p>
-    </div>
-
     <br>
     <div class="page_container">
         <div class="accent_bar"></div>
