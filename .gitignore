@@ -1,2 +1,3 @@
 /.dockerrc
 /vendor
+composer.lock

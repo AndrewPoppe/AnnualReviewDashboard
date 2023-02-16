@@ -27,6 +27,7 @@ class AnnualReviewDashboard extends \ExternalModules\AbstractExternalModule
         $cas_server_ca_cert_path = $this->getFile($cas_server_ca_cert_id);
         $server_force_https = $this->getSystemSetting("server-force-https");
         $server_force_http = $this->getSystemSetting("server-force-http");
+        $service_base_url = APP_PATH_WEBROOT_FULL;
 
         // Enable https fix
         if ($server_force_https == 1) {
@@ -40,7 +41,7 @@ class AnnualReviewDashboard extends \ExternalModules\AbstractExternalModule
         }
 
         // Initialize phpCAS
-        \phpCAS::client(CAS_VERSION_2_0, $cas_host, $cas_port, $cas_context);
+        \phpCAS::client(CAS_VERSION_2_0, $cas_host, $cas_port, $cas_context, $service_base_url);
 
         // Set the CA certificate that is the issuer of the cert
         // on the CAS server
