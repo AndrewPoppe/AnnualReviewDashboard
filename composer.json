@@ -1,6 +1,6 @@
 {
     "require": {
-        "jasig/phpcas": "1.3.*"
+        "jasig/phpcas": "*"
     },
     "config": {
         "platform": {

@@ -24,7 +24,7 @@ class AnnualReviewDashboard extends \ExternalModules\AbstractExternalModule
         $cas_context = $this->getSystemSetting("cas-context");
         $cas_port = (int) $this->getSystemSetting("cas-port");
         $cas_server_ca_cert_id = $this->getSystemSetting("cas-server-ca-cert-pem");
-        $cas_server_ca_cert_path = $this->getFile($cas_server_ca_cert_id);
+        $cas_server_ca_cert_path = is_null($cas_server_ca_cert_id) ? null : $this->getFile($cas_server_ca_cert_id);
         $server_force_https = $this->getSystemSetting("server-force-https");
         $server_force_http = $this->getSystemSetting("server-force-http");
         $service_base_url = APP_PATH_WEBROOT_FULL;
@@ -252,14 +252,15 @@ class AnnualReviewDashboard extends \ExternalModules\AbstractExternalModule
 
         foreach ($ids as $id) {
 
-            $filterLogic = "[departmental_leadership] = '" . $id . "'";
+            $filterLogic = "([departmental_leadership] = '" . $id . "'";
             $filterLogic .= " OR [mentor_name] = '" . $id . "'";
             $filterLogic .= " OR [division_chief_name] = '" . $id . "'";
             $filterLogic .= " OR [mentor_committee_1] = '" . $id . "'";
             $filterLogic .= " OR [mentor_committee_2] = '" . $id . "'";
             $filterLogic .= " OR [mentor_committee_3] = '" . $id . "'";
             $filterLogic .= " OR [mentor_committee_4] = '" . $id . "'";
-            $filterLogic .= " OR [mentor_committee_5] = '" . $id . "'";
+            $filterLogic .= " OR [mentor_committee_5] = '" . $id . "')";
+            $filterLogic .= " AND [exclusion_reason] <> 1";
             $params = array(
                 "project_id" => $project_id,
                 "fields" => array(
