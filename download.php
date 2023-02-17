@@ -1,5 +1,7 @@
 <?php
 
+namespace YaleREDCap\AnnualReviewDashboard;
+
 $id = $module->login();
 
 if ($id == FALSE) {
