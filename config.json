@@ -12,6 +12,12 @@
     "framework-version": 12,
     "project-settings": [
         {
+            "key": "eval-folder-id",
+            "name": "<strong>Evaluation Folder</strong>:<br>ID of the File Repository folder where evaluation PDFs are stored",
+            "required": false,
+            "type": "text"
+        },
+        {
             "key": "aliases",
             "name": "<strong>Aliases</strong>: identify users who should be able to access another user's dashboard",
             "required": false,
@@ -86,5 +92,8 @@
     "no-auth-pages": [
         "dashboard",
         "download"
+    ],
+    "auth-ajax-actions": [
+        "dataImport"
     ]
 }

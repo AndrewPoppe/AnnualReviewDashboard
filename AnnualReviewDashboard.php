@@ -13,6 +13,152 @@ use ExternalModules\Framework;
  */
 class AnnualReviewDashboard extends \ExternalModules\AbstractExternalModule
 {
+
+    public function redcap_save_record($projectId, $record, $instrument, $eventId, $groupId, $surveyHash, $responseId, $repeatInstance)
+    {
+        if ( $instrument !== 'initial_faculty_development_annual_questionnaire' ) {
+            return;
+        }
+
+
+        // Only look for a file if there isn't already one
+        try {
+            $params     = array(
+                'project_id' => $projectId,
+                'records'    => array( $record ),
+                'fields'     => 'teaching_evaluations',
+            );
+            $evalsExist = sizeof(\REDCap::getData($params));
+        } catch ( \Throwable $e ) {
+            $this->log($e->getMessage());
+            return;
+        }
+        if ( $evalsExist ) {
+            return;
+        }
+
+        // Search for an eval file
+        $this->findEvalFile($projectId, $record, $eventId);
+
+    }
+
+    private function getRecords($projectId)
+    {
+        $records = [];
+        $sql     = "SELECT DISTINCT(record) record FROM redcap_data WHERE project_id = ?";
+        $result  = $this->framework->query($sql, [ $projectId ]);
+        while ( $row = $result->fetch_assoc() ) {
+            $records[] = $row['record'];
+        }
+        return $records;
+    }
+
+    public function redcap_module_ajax($action, $payload, $project_id, $record, $instrument, $event_id, $repeatInstance, $surveyHash, $responseId, $surveyQueueHash, $page, $pageFull, $userId, $groupId)
+    {
+        $projectId = $payload['project_id'];
+        $eventId   = $this->framework->getEventId();
+        if ( $action == "dataImport" ) {
+            $records = $this->getRecords($projectId);
+
+            // Only look for a file if there isn't already one
+            try {
+                $params = array(
+                    'project_id' => $projectId,
+                    'fields'     => 'teaching_evaluations',
+                    'records'    => $records
+                );
+                $data   = \REDCap::getData($params);
+                foreach ( $records as $thisRecord ) {
+                    $evalsExist = sizeof($data[(string) $thisRecord]);
+                    if ( $evalsExist ) {
+                        continue;
+                    }
+
+                    // Search for an eval file
+                    $this->findEvalFile($projectId, $thisRecord, $eventId);
+                }
+            } catch ( \Throwable $e ) {
+                $this->log($e->getMessage());
+                return;
+            }
+        }
+    }
+
+
+
+    public function redcap_every_page_top()
+    {
+        $this->initializeJavascriptModuleObject();
+        ?>
+<script>
+const ARD = <?= $this->getJavascriptModuleObjectName() ?>;
+$(function() {
+    if (ARD.isImportPage() && $('#center > .green > b').eq(0).text() === 'Import Successful!') {
+        console.log('dataImport');
+        ARD.ajax('dataImport', {
+            project_id: ARD.getUrlParameter('pid')
+        }).then(resp => console.log(resp));
+    }
+});
+</script>
+<?php
+    }
+
+    private function findEvalFile($projectId, $record, $eventId)
+    {
+        try {
+            $params = array(
+                'project_id' => $projectId,
+                'records'    => array( $record ),
+                'fields'     => 'init_netid',
+            );
+            $data   = \REDCap::getData($params);
+        } catch ( \Throwable $e ) {
+            $this->log($e->getMessage());
+            return;
+        }
+
+        $netid    = $data[$record][$eventId]['init_netid'];
+        $folderId = $this->framework->getProjectSetting('eval-folder-id');
+
+        $sql    = 'SELECT m.doc_id
+FROM redcap_edocs_metadata m
+LEFT JOIN redcap_docs_to_edocs d2e
+ON m.doc_id = d2e.doc_id
+LEFT JOIN redcap_docs_folders_files f
+ON f.docs_id = d2e.docs_id
+WHERE f.folder_id = ?
+AND m.doc_name like ?';
+        $params = [ $folderId, '%' . $netid . '%' ];
+
+        $result = $this->framework->query($sql, $params);
+        $row    = $result->fetch_assoc();
+
+        if ( empty($row) ) {
+            $this->framework->log('No eval file found', [
+                'project' => $projectId,
+                'record'  => $record,
+                'netid'   => $netid
+            ]);
+            return;
+        }
+
+        $this->importFile($projectId, $record, $row['doc_id']);
+
+    }
+
+    private function importFile($projectId, $record, $docId)
+    {
+        try {
+            $newDocId = \REDCap::copyFile($docId, $projectId);
+            \REDCap::addFileToField($newDocId, $projectId, $record, 'teaching_evaluations');
+            \REDCap::logEvent('Teaching evaluations imported', "Record: $record", null, $record, null, $projectId);
+
+        } catch ( \Throwable $e ) {
+            $this->log('Error importing file', [ 'project' => $projectId, 'record' => $record, 'error' => $e->getMessage() ]);
+        }
+    }
+
     /**
      * Initiate CAS authentication
      *
@@ -214,7 +360,7 @@ class AnnualReviewDashboard extends \ExternalModules\AbstractExternalModule
 
     /**
      * @param mixed $id - the primary id of the user
-     * 
+     *
      * @return array of netids that the primary id has access to view (including the primary)
      */
     public function getValidIDs($id)
@@ -299,7 +445,11 @@ class AnnualReviewDashboard extends \ExternalModules\AbstractExternalModule
                 $init_ladder_track = $labels["init_ladder_track"][$newRecord["init_ladder_track"]];
                 $init_rank         = $labels["init_rank"][$newRecord["init_rank"]];
                 $review_type_raw   = $labels["review_type"][$newRecord["review_type"]];
-                $review_type       = $this->getReviewType($review_type_raw, $id, strtolower($newRecord["departmental_leadership"]));
+                $review_type       = $this->getReviewType(
+                    $review_type_raw,
+                    $id,
+                    strtolower($newRecord["departmental_leadership"])
+                );
 
                 $status      = $this->getStatus($id, $newRecord);
                 $link        = $this->getLink($recordid, $status, $id);
