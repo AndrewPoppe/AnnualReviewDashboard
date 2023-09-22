@@ -9,8 +9,7 @@
             "institution": "Yale Center for Clinical Investigation"
         }
     ],
-    "framework-version": 9,
-    "permissions": [],
+    "framework-version": 12,
     "project-settings": [
         {
             "key": "aliases",
