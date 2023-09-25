@@ -95,5 +95,6 @@
     ],
     "auth-ajax-actions": [
         "dataImport"
-    ]
+    ],
+    "enable-no-auth-logging": true
 }
