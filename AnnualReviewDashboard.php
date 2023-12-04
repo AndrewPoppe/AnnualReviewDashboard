@@ -44,9 +44,11 @@ class AnnualReviewDashboard extends \ExternalModules\AbstractExternalModule
 
     private function getRecords($projectId)
     {
-        $records = [];
-        $sql     = "SELECT DISTINCT(record) record FROM redcap_data WHERE project_id = ?";
-        $result  = $this->framework->query($sql, [ $projectId ]);
+        $records    = [];
+        $data_table = method_exists('\REDCap', 'getDataTable')
+            ? \REDCap::getDataTable($projectId) : "redcap_data";
+        $sql        = "SELECT DISTINCT(record) record FROM $data_table WHERE project_id = ?";
+        $result     = $this->framework->query($sql, [ $projectId ]);
         while ( $row = $result->fetch_assoc() ) {
             $records[] = $row['record'];
         }
@@ -90,18 +92,18 @@ class AnnualReviewDashboard extends \ExternalModules\AbstractExternalModule
     {
         $this->initializeJavascriptModuleObject();
         ?>
-<script>
-const ARD = <?= $this->getJavascriptModuleObjectName() ?>;
-$(function() {
-    if (ARD.isImportPage() && $('#center > .green > b').eq(0).text() === 'Import Successful!') {
-        console.log('dataImport');
-        ARD.ajax('dataImport', {
-            project_id: ARD.getUrlParameter('pid')
-        }).then(resp => console.log(resp));
-    }
-});
-</script>
-<?php
+        <script>
+            const ARD = <?= $this->getJavascriptModuleObjectName() ?>;
+            $(function () {
+                if (ARD.isImportPage() && $('#center > .green > b').eq(0).text() === 'Import Successful!') {
+                    console.log('dataImport');
+                    ARD.ajax('dataImport', {
+                        project_id: ARD.getUrlParameter('pid')
+                    }).then(resp => console.log(resp));
+                }
+            });
+        </script>
+        <?php
     }
 
     private function findEvalFile($projectId, $record, $eventId)
@@ -480,103 +482,103 @@ AND m.doc_name like ?';
             return;
         }
         ?>
-<div class="dashboard_container">
-    <table id="dashboard_table" class="table stripe hover row-border">
-        <thead>
-            <tr>
-                <th>First Name</th>
-                <th>Last Name</th>
-                <th>Department</th>
-                <th>Ladder Track</th>
-                <th>Rank</th>
-                <th>Review Type</th>
-                <th>Status</th>
-                <th>Link</th>
-            </tr>
-        </thead>
-        <?php foreach ( $data as $record ) { ?>
+        <div class="dashboard_container">
+            <table id="dashboard_table" class="table stripe hover row-border">
+                <thead>
+                    <tr>
+                        <th>First Name</th>
+                        <th>Last Name</th>
+                        <th>Department</th>
+                        <th>Ladder Track</th>
+                        <th>Rank</th>
+                        <th>Review Type</th>
+                        <th>Status</th>
+                        <th>Link</th>
+                    </tr>
+                </thead>
+                <?php foreach ( $data as $record ) { ?>
 
-        <tr data-status="<?= $record['status'] ?>" data-record="<?= $record["record_id"] ?>">
-            <td>
-                <?= $this->framework->escape($record["init_first_name"]) ?>
-            </td>
-            <td>
-                <?= $this->framework->escape($record["init_last_name"]) ?>
-            </td>
-            <td>
-                <?= $this->framework->escape($record["init_department"]) ?>
-            </td>
-            <td>
-                <?= $this->framework->escape($record["init_ladder_track"]) ?>
-            </td>
-            <td>
-                <?= $this->framework->escape($record["init_rank"]) ?>
-            </td>
-            <td>
-                <?= $this->framework->escape($record["review_type"]) ?>
-            </td>
-            <td>
-                <?= $record["status_text"] ?>
-            </td>
-            <td>
-                <?= $record["link"] ?>
-            </td>
-        </tr>
+                    <tr data-status="<?= $record['status'] ?>" data-record="<?= $record["record_id"] ?>">
+                        <td>
+                            <?= $this->framework->escape($record["init_first_name"]) ?>
+                        </td>
+                        <td>
+                            <?= $this->framework->escape($record["init_last_name"]) ?>
+                        </td>
+                        <td>
+                            <?= $this->framework->escape($record["init_department"]) ?>
+                        </td>
+                        <td>
+                            <?= $this->framework->escape($record["init_ladder_track"]) ?>
+                        </td>
+                        <td>
+                            <?= $this->framework->escape($record["init_rank"]) ?>
+                        </td>
+                        <td>
+                            <?= $this->framework->escape($record["review_type"]) ?>
+                        </td>
+                        <td>
+                            <?= $record["status_text"] ?>
+                        </td>
+                        <td>
+                            <?= $record["link"] ?>
+                        </td>
+                    </tr>
 
-        <?php } ?>
-    </table>
-</div>
-<script>
-$(document).ready(function() {
-    $('#dashboard_table').DataTable({
-        dom: 'rf<"clear">Bti',
-        stateSave: true,
-        buttons: [{
-                text: 'Show Complete Reviews',
-                action: function(e, dt, node, config) {
-                    if ($.fn.dataTable.ext.search.length) {
-                        $.fn.dataTable.ext.search.pop();
-                        $(this.node()).html('Hide Complete Reviews');
-                        dt.draw();
-                    } else {
+                <?php } ?>
+            </table>
+        </div>
+        <script>
+            $(document).ready(function () {
+                $('#dashboard_table').DataTable({
+                    dom: 'rf<"clear">Bti',
+                    stateSave: true,
+                    buttons: [{
+                        text: 'Show Complete Reviews',
+                        action: function (e, dt, node, config) {
+                            if ($.fn.dataTable.ext.search.length) {
+                                $.fn.dataTable.ext.search.pop();
+                                $(this.node()).html('Hide Complete Reviews');
+                                dt.draw();
+                            } else {
+                                $.fn.dataTable.ext.search.push(
+                                    function (settings, data, dataIndex) {
+                                        $status = $(dt.row(dataIndex).node()).attr('data-status');
+                                        return $status != 3 && $status != 7;
+                                    }
+                                );
+                                $(this.node()).text('Show Complete Reviews');
+                                dt.draw();
+                            }
+                        }
+                    },
+                        'colvis',
+                    {
+                        text: 'Refresh Table',
+                        action: function () {
+                            window.location.reload();
+                        }
+                    }
+                    ],
+                    initComplete: function (settings, json) {
+                        const dt = this.DataTable();
                         $.fn.dataTable.ext.search.push(
-                            function(settings, data, dataIndex) {
+                            function (settings, data, dataIndex) {
                                 $status = $(dt.row(dataIndex).node()).attr('data-status');
                                 return $status != 3 && $status != 7;
                             }
                         );
-                        $(this.node()).text('Show Complete Reviews');
                         dt.draw();
-                    }
-                }
-            },
-            'colvis',
-            {
-                text: 'Refresh Table',
-                action: function() {
-                    window.location.reload();
-                }
-            }
-        ],
-        initComplete: function(settings, json) {
-            const dt = this.DataTable();
-            $.fn.dataTable.ext.search.push(
-                function(settings, data, dataIndex) {
-                    $status = $(dt.row(dataIndex).node()).attr('data-status');
-                    return $status != 3 && $status != 7;
-                }
-            );
-            dt.draw();
-        },
-        order: [
-            [6, 'desc']
-        ],
-        paging: false,
-        scrollY: `calc(100vh - 200px)`,
-        scrollCollapse: true
-    });
-});
-</script>
-<?php
+                    },
+                    order: [
+                        [6, 'desc']
+                    ],
+                    paging: false,
+                    scrollY: `calc(100vh - 200px)`,
+                    scrollCollapse: true
+                });
+            });
+        </script>
+        <?php
     }
 }
