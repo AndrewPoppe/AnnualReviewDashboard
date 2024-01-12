@@ -30,7 +30,7 @@ class AnnualReviewDashboard extends \ExternalModules\AbstractExternalModule
             );
             $evalsExist = sizeof(\REDCap::getData($params));
         } catch ( \Throwable $e ) {
-            $this->log($e->getMessage());
+            $this->framework->log($e->getMessage());
             return;
         }
         if ( $evalsExist ) {
@@ -80,7 +80,7 @@ class AnnualReviewDashboard extends \ExternalModules\AbstractExternalModule
                     $this->findEvalFile($projectId, $thisRecord, $eventId);
                 }
             } catch ( \Throwable $e ) {
-                $this->log($e->getMessage());
+                $this->framework->log($e->getMessage());
                 return;
             }
         }
@@ -90,10 +90,10 @@ class AnnualReviewDashboard extends \ExternalModules\AbstractExternalModule
 
     public function redcap_every_page_top()
     {
-        $this->initializeJavascriptModuleObject();
+        $this->framework->initializeJavascriptModuleObject();
         ?>
         <script>
-            const ARD = <?= $this->getJavascriptModuleObjectName() ?>;
+            const ARD = <?= $this->framework->getJavascriptModuleObjectName() ?>;
             $(function () {
                 if (ARD.isImportPage() && $('#center > .green > b').eq(0).text() === 'Import Successful!') {
                     console.log('dataImport');
@@ -116,7 +116,7 @@ class AnnualReviewDashboard extends \ExternalModules\AbstractExternalModule
             );
             $data   = \REDCap::getData($params);
         } catch ( \Throwable $e ) {
-            $this->log($e->getMessage());
+            $this->framework->log($e->getMessage());
             return;
         }
 
@@ -157,7 +157,7 @@ AND m.doc_name like ?';
             \REDCap::logEvent('Teaching evaluations imported', "Record: $record", null, $record, null, $projectId);
 
         } catch ( \Throwable $e ) {
-            $this->log('Error importing file', [ 'project' => $projectId, 'record' => $record, 'error' => $e->getMessage() ]);
+            $this->framework->log('Error importing file', [ 'project' => $projectId, 'record' => $record, 'error' => $e->getMessage() ]);
         }
     }
 
@@ -257,9 +257,9 @@ AND m.doc_name like ?';
         // 7 - final review completed
         // 8 - pending mentorship committee review
         // 9 - ready for mentorship committee review (show first stage link)
-        $chair_completed      = $record["chairs_comments_for_faculty_development_annual_que_complete"] == 2;
-        $faculty_completed    = $record["faculty_development_annual_questionnaire_2022_complete"] == 2;
-        $first_stage_complete = $record["first_stage_review_comments_for_faculty_developmen_complete"] == 2;
+        $chair_completed      = $record["fdaq_department_leader_review_complete"] == 2;
+        $faculty_completed    = $record["fdaq_current_year_complete"] == 2;
+        $first_stage_complete = $record["fdaq_first_stage_review_complete"] == 2;
         $review_type          = $record["review_type"];
         $mentor               = strtolower($record["mentor_name"]);
         $division_chief       = strtolower($record["division_chief_name"]);
@@ -347,10 +347,10 @@ AND m.doc_name like ?';
     {
         $link = "";
         if ( $status == 6 ) {
-            $survey_link = \REDCap::getSurveyLink($record_id, "chairs_comments_for_faculty_development_annual_que");
+            $survey_link = \REDCap::getSurveyLink($record_id, "fdaq_department_leader_review");
             $link        = '<a target="_blank" href="' . $survey_link . '">Start Review</a>';
         } else if ( $status == 4 || $status == 5 || $status == 9 ) {
-            $survey_link = \REDCap::getSurveyLink($record_id, "first_stage_review_comments_for_faculty_developmen");
+            $survey_link = \REDCap::getSurveyLink($record_id, "fdaq_first_stage_review");
             $link        = '<a target="_blank" href="' . $survey_link . '">Start Review</a>';
         } else if ( $status == 7 ) {
             $link = "<a href='" . $this->framework->getUrl("download.php?record_id=" . $record_id . "&id=" . $id . "&type=2", true) . "' target='_blank'>Download Review</button>";
@@ -394,6 +394,7 @@ AND m.doc_name like ?';
     {
         $ids     = $this->getValidIDs($id);
         $alldata = array();
+        $pid     = $this->framework->getProjectId() ?? $this->framework->getProject()->getProjectId();
 
         $labels = array(
             "init_department"   => $this->framework->getChoiceLabels("init_department"),
@@ -414,7 +415,7 @@ AND m.doc_name like ?';
             $filterLogic .= " OR [mentor_committee_5] = '" . $id . "')";
             $filterLogic .= " AND [exclusion_reason] <> 1";
             $params      = array(
-                "project_id"     => $project_id,
+                "project_id"     => $pid,
                 "fields"         => array(
                     "init_first_name",
                     "init_last_name",
@@ -430,9 +431,9 @@ AND m.doc_name like ?';
                     "mentor_committee_5",
                     "division_chief_name",
                     "departmental_leadership",
-                    "faculty_development_annual_questionnaire_2022_complete",
-                    "first_stage_review_comments_for_faculty_developmen_complete",
-                    "chairs_comments_for_faculty_development_annual_que_complete"
+                    "fdaq_current_year_complete",
+                    "fdaq_first_stage_review_complete",
+                    "fdaq_department_leader_review_complete"
                 ),
                 "filterLogic"    => $filterLogic,
                 "exportAsLabels" => true

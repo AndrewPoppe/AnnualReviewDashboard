@@ -58,7 +58,7 @@ function getFirstStagePDF($record_id, $id)
     );
     $data        = \REDCap::getData($params);
     if ( !empty($data) ) {
-        $pdfcontent = \REDCap::getPDF($record_id, "first_stage_review_comments_for_faculty_developmen");
+        $pdfcontent = \REDCap::getPDF($record_id, "fdaq_first_stage_review");
 
         // Set PHP headers to output the PDF to be downloaded as a file in the web browser
         header('Content-type: application/pdf');
@@ -84,7 +84,7 @@ function getFinalPDF($record_id, $id)
     );
     $data        = \REDCap::getData($params);
     if ( !empty($data) ) {
-        $pdfcontent = \REDCap::getPDF($record_id, "chairs_comments_for_faculty_development_annual_que");
+        $pdfcontent = \REDCap::getPDF($record_id, "fdaq_department_leader_review");
 
         // Set PHP headers to output the PDF to be downloaded as a file in the web browser
         header('Content-type: application/pdf');

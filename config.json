@@ -9,7 +9,7 @@
             "institution": "Yale Center for Clinical Investigation"
         }
     ],
-    "framework-version": 12,
+    "framework-version": 14,
     "project-settings": [
         {
             "key": "eval-folder-id",
@@ -96,5 +96,11 @@
     "auth-ajax-actions": [
         "dataImport"
     ],
-    "enable-no-auth-logging": true
+    "enable-no-auth-logging": true,
+    "compatibility": {
+        "php-version-min": "7.4.0",
+        "php-version-max": "",
+        "redcap-version-min": "13.7.0",
+        "redcap-version-max": ""
+    }
 }
