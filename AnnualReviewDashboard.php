@@ -16,7 +16,7 @@ class AnnualReviewDashboard extends \ExternalModules\AbstractExternalModule
 
     public function redcap_save_record($projectId, $record, $instrument, $eventId, $groupId, $surveyHash, $responseId, $repeatInstance)
     {
-        if ( $instrument !== 'initial_faculty_development_annual_questionnaire' ) {
+        if ( $instrument !== $this->framework->getProjectSetting('initial-questionnaire-form', $projectId) ) {
             return;
         }
 
@@ -86,6 +86,43 @@ class AnnualReviewDashboard extends \ExternalModules\AbstractExternalModule
         }
     }
 
+    public function validateSettings($settings)
+    {
+        $project_id = $this->framework->getProjectId();
+        if ( empty($project_id) ) {
+            return;
+        }
+
+        $proj = $this->framework->getProject($project_id);
+
+        // Check that the Initial Faculty Development Annual Questionnaire instrument has necessary fields
+        $init_fdaq_setting         = $this->framework->getProjectSetting('initial-questionnaire-form');
+        $init_fdaq                 = $proj->getForm($init_fdaq_setting);
+        $init_fdaq_fields          = $init_fdaq->getFieldNames();
+        $init_fdaq_required_fields = [
+            'init_first_name',
+            'init_last_name',
+            'init_department',
+            'init_ladder_track',
+            'init_rank',
+            'init_netid',
+            'review_type',
+            'mentor_name',
+            'mentor_committee_1',
+            'mentor_committee_2',
+            'mentor_committee_3',
+            'mentor_committee_4',
+            'mentor_committee_5',
+            'division_chief_name',
+            'departmental_leadership',
+            'teaching_evaluations',
+            'exclusion_reason'
+        ];
+        $init_fdaq_missing_fields  = array_diff($init_fdaq_required_fields, $init_fdaq_fields);
+        if ( !empty($init_fdaq_missing_fields) ) {
+            return 'The selected Initial Faculty Development Annual Questionnaire instrument (' . $init_fdaq_setting . ') is missing the following fields: ' . implode(', ', $init_fdaq_missing_fields);
+        }
+    }
 
 
     public function redcap_every_page_top()
@@ -257,9 +294,9 @@ AND m.doc_name like ?';
         // 7 - final review completed
         // 8 - pending mentorship committee review
         // 9 - ready for mentorship committee review (show first stage link)
-        $chair_completed      = $record["fdaq_department_leader_review_complete"] == 2;
-        $faculty_completed    = $record["fdaq_current_year_complete"] == 2;
-        $first_stage_complete = $record["fdaq_first_stage_review_complete"] == 2;
+        $chair_completed      = $record[$this->framework->getProjectSetting('department-leader-review-form') . "_complete"] == 2;
+        $faculty_completed    = $record[$this->framework->getProjectSetting('current-year-form') . "_complete"] == 2;
+        $first_stage_complete = $record[$this->framework->getProjectSetting('first-stage-review-form') . "_complete"] == 2;
         $review_type          = $record["review_type"];
         $mentor               = strtolower($record["mentor_name"]);
         $division_chief       = strtolower($record["division_chief_name"]);
@@ -347,10 +384,10 @@ AND m.doc_name like ?';
     {
         $link = "";
         if ( $status == 6 ) {
-            $survey_link = \REDCap::getSurveyLink($record_id, "fdaq_department_leader_review");
+            $survey_link = \REDCap::getSurveyLink($record_id, $this->framework->getProjectSetting('department-leader-review-form'));
             $link        = '<a target="_blank" href="' . $survey_link . '">Start Review</a>';
         } else if ( $status == 4 || $status == 5 || $status == 9 ) {
-            $survey_link = \REDCap::getSurveyLink($record_id, "fdaq_first_stage_review");
+            $survey_link = \REDCap::getSurveyLink($record_id, $this->framework->getProjectSetting('first-stage-review-form'));
             $link        = '<a target="_blank" href="' . $survey_link . '">Start Review</a>';
         } else if ( $status == 7 ) {
             $link = "<a href='" . $this->framework->getUrl("download.php?record_id=" . $record_id . "&id=" . $id . "&type=2", true) . "' target='_blank'>Download Review</button>";
@@ -431,9 +468,9 @@ AND m.doc_name like ?';
                     "mentor_committee_5",
                     "division_chief_name",
                     "departmental_leadership",
-                    "fdaq_current_year_complete",
-                    "fdaq_first_stage_review_complete",
-                    "fdaq_department_leader_review_complete"
+                    $this->framework->getProjectSetting('current-year-form') . "_complete",
+                    $this->framework->getProjectSetting('first-stage-review-form') . "_complete",
+                    $this->framework->getProjectSetting('department-leader-review-form') . "_complete"
                 ),
                 "filterLogic"    => $filterLogic,
                 "exportAsLabels" => true

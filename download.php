@@ -39,7 +39,7 @@ function getPdfData($record_id, $id, $type)
 
 function getFirstStagePDF($record_id, $id)
 {
-    global $projectId;
+    global $projectId, $module;
     $filterLogic = "([record_id] = '" . $record_id . "') AND (";
     $filterLogic .= " [mentor_name] = '" . $id . "'";
     $filterLogic .= " OR [division_chief_name] = '" . $id . "'";
@@ -58,7 +58,7 @@ function getFirstStagePDF($record_id, $id)
     );
     $data        = \REDCap::getData($params);
     if ( !empty($data) ) {
-        $pdfcontent = \REDCap::getPDF($record_id, "fdaq_first_stage_review");
+        $pdfcontent = \REDCap::getPDF($record_id, $module->framework->getProjectSetting('first-stage-review-form', $projectId));
 
         // Set PHP headers to output the PDF to be downloaded as a file in the web browser
         header('Content-type: application/pdf');
@@ -73,7 +73,7 @@ function getFirstStagePDF($record_id, $id)
 
 function getFinalPDF($record_id, $id)
 {
-    global $projectId;
+    global $projectId, $module;
     $filterLogic = "[record_id] = '" . $record_id . "' AND [departmental_leadership] = '" . $id . "'";
     $params      = array(
         "project_id"  => $projectId,
@@ -84,7 +84,7 @@ function getFinalPDF($record_id, $id)
     );
     $data        = \REDCap::getData($params);
     if ( !empty($data) ) {
-        $pdfcontent = \REDCap::getPDF($record_id, "fdaq_department_leader_review");
+        $pdfcontent = \REDCap::getPDF($record_id, $module->framework->getProjectSetting('department-leader-review-form', $projectId));
 
         // Set PHP headers to output the PDF to be downloaded as a file in the web browser
         header('Content-type: application/pdf');

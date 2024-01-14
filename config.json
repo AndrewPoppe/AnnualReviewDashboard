@@ -18,6 +18,30 @@
             "type": "text"
         },
         {
+            "key": "initial-questionnaire-form",
+            "name": "Initial Faculty Development Annual Questionnaire",
+            "required": true,
+            "type": "form-list"
+        },
+        {
+            "key": "department-leader-review-form",
+            "name": "FDAQ Department Leader Review Form",
+            "required": true,
+            "type": "form-list"
+        },
+        {
+            "key": "current-year-form",
+            "name": "Current Year Form",
+            "required": true,
+            "type": "form-list"
+        },
+        {
+            "key": "first-stage-review-form",
+            "name": "First Stage Review Form",
+            "required": true,
+            "type": "form-list"
+        },
+        {
             "key": "aliases",
             "name": "<strong>Aliases</strong>: identify users who should be able to access another user's dashboard",
             "required": false,
