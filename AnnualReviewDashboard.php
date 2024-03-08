@@ -206,7 +206,7 @@ AND m.doc_name like ?';
     private function authenticate()
     {
 
-        require_once __DIR__ . '/vendor/jasig/phpcas/CAS.php';
+        require_once __DIR__ . '/vendor/apereo/phpcas/CAS.php';
 
         $cas_host                = $this->framework->getSystemSetting("cas-host");
         $cas_context             = $this->framework->getSystemSetting("cas-context");
@@ -267,16 +267,24 @@ AND m.doc_name like ?';
     {
         $this->framework->log('Attempting to log in');
         try {
+            $this->framework->log('m0');
             $id = $this->authenticate();
+            $this->framework->log('m1');
         } catch ( \CAS_GracefullTerminationException $e ) {
             if ( $e->getCode() !== 0 ) {
+                $this->framework->log('m2');
                 $this->framework->log($e->getMessage());
+                $this->framework->log('m3');
             }
         } catch ( \Exception $e ) {
+            $this->framework->log('m4');
             $this->framework->log($e->getMessage());
+            $this->framework->log('m5');
         } finally {
             if ( empty($id) ) {
+                $this->framework->log('m6');
                 $this->framework->log('Could not log in');
+                $this->framework->log('m7');
             }
             return $id;
         }
