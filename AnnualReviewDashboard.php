@@ -236,7 +236,7 @@ AND m.doc_name like ?';
         \phpCAS::setCasServerCACert($cas_server_ca_cert_path);
 
         // Don't exit, let me handle instead
-        //\CAS_GracefullTerminationException::throwInsteadOfExiting();
+        \CAS_GracefullTerminationException::throwInsteadOfExiting();
 
         // force CAS authentication
         \phpCAS::forceAuthentication();
@@ -272,10 +272,10 @@ AND m.doc_name like ?';
             if ( $e->getCode() !== 0 ) {
                 $this->framework->log($e->getMessage());
             }
-        } catch ( \Exception $e ) {
+        } catch ( \Throwable $e ) {
             $this->framework->log($e->getMessage());
         } finally {
-            if ( empty($id) ) {
+            if ( $id === false || empty($id) ) {
                 $this->framework->log('Could not log in');
             }
             return $id;
