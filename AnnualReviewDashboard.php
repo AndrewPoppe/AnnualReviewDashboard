@@ -475,7 +475,7 @@ AND m.doc_name like ?';
                 "filterLogic"    => $filterLogic,
                 "exportAsLabels" => true
             );
-            $data        = \REDCap::getData($params);
+            $data        = $this->framework->escape(\REDCap::getData($params));
 
             foreach ( $data as $recordid => $record ) {
                 $eid       = $this->getEventId();
