@@ -9,7 +9,7 @@
             "institution": "Yale Center for Clinical Investigation"
         }
     ],
-    "framework-version": 14,
+    "framework-version": 15,
     "project-settings": [
         {
             "key": "eval-folder-id",
@@ -66,40 +66,22 @@
     ],
     "system-settings": [
         {
-            "key": "cas-host",
-            "name": "<strong>Full Hostname of your CAS Server</strong>:<br>e.g., secure.its.yale.edu",
+            "key": "entraid-client-id",
+            "name": "<strong>Entra ID Client ID</strong>",
             "required": true,
             "type": "text"
         },
         {
-            "key": "cas-context",
-            "name": "<strong>Context of the CAS Server</strong>:<br>e.g., /cas",
+            "key": "entraid-ad-tenant",
+            "name": "<strong>Entra ID AD Tenant</strong>",
             "required": true,
             "type": "text"
         },
         {
-            "key": "cas-port",
-            "name": "<strong>Port of your CAS server</strong>:<br>Normally for a https server it's 443",
+            "key": "entraid-redirect-url",
+            "name": "<strong>Entra ID Redirect URL (SPA)</strong>",
             "required": true,
             "type": "text"
-        },
-        {
-            "key": "cas-server-ca-cert-pem",
-            "name": "<strong>CA cert pem file</strong>:<br>e.g., cacert.pem",
-            "required": true,
-            "type": "file"
-        },
-        {
-            "key": "server-force-https",
-            "name": "<strong>HTTPS Override</strong>:<br>Check this if you experience the CAS server redirecting to http despite your REDCap server using https protocol",
-            "required": false,
-            "type": "checkbox"
-        },
-        {
-            "key": "server-force-http",
-            "name": "<strong>Force HTTP</strong>:<br>Check this if your REDCap server uses http (not https) and CAS isn't working correctly. This does nothing if the <code>HTTPS Override</code> setting above is selected",
-            "required": false,
-            "type": "checkbox"
         }
     ],
     "links": {
@@ -120,11 +102,14 @@
     "auth-ajax-actions": [
         "dataImport"
     ],
+    "no-auth-ajax-actions": [
+        "authenticate"
+    ],
     "enable-no-auth-logging": true,
     "compatibility": {
         "php-version-min": "7.4.0",
         "php-version-max": "",
-        "redcap-version-min": "13.7.0",
+        "redcap-version-min": "14.0.2",
         "redcap-version-max": ""
     }
 }
