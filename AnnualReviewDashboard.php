@@ -14,6 +14,9 @@ use ExternalModules\Framework;
 class AnnualReviewDashboard extends \ExternalModules\AbstractExternalModule
 {
 
+    const SESSION_COOKIE = "AnnualReviewDashboard_session";
+    const USERNAME_COOKIE = "AnnualReviewDashboard_username";
+
     public function redcap_save_record($projectId, $record, $instrument, $eventId, $groupId, $surveyHash, $responseId, $repeatInstance)
     {
         if ( $instrument !== $this->framework->getProjectSetting('initial-questionnaire-form', $projectId) ) {
@@ -83,6 +86,51 @@ class AnnualReviewDashboard extends \ExternalModules\AbstractExternalModule
                 $this->framework->log($e->getMessage());
                 return;
             }
+        } elseif ( $action === "authenticate" ) {
+            $accessToken = $payload["token"];
+            $username    = $this->getUserData($accessToken);
+            $result      = [ "username" => $username ];
+            if ( !empty($username) ) {
+                $this->initSession();
+                \Session::saveCookie(self::SESSION_COOKIE, session_id(), 0, true);
+                $_SESSION[self::USERNAME_COOKIE] = $username;
+                $result["success"]               = true;
+            }
+            return $result;
+        }
+    }
+
+    public function getUserData(string $accessToken) : string
+    {
+        $username = "";
+        try {
+            //Fetching the basic user information that is likely needed by your application
+            $options = array(
+                "http" => array(  //Use "http" even if you send the request with https
+                    "method" => "GET",
+                    "header" => "Accept: application/json\r\n" .
+                        "Authorization: Bearer " . $accessToken . "\r\n"
+                )
+            );
+            $context = stream_context_create($options);
+            $json    = file_get_contents("https://graph.microsoft.com/v1.0/me?\$select=onPremisesSamAccountName", false, $context);
+            if ( $json === false ) {
+                $this->framework->log('Error received during user data fetch.');
+                return $username;
+            }
+
+            $userdata = json_decode($json, true);  //This should now contain your logged on user information
+            if ( isset($userdata["error"]) ) {
+                $this->framework->log('User data fetch contained an error.');
+                return $username;
+            }
+
+            $username       = $userdata["onPremisesSamAccountName"] ?? "";
+            $username_clean = AnnualReviewDashboard::toLowerCase($username);
+            return $username_clean;
+        } catch ( \Throwable $e ) {
+            $this->framework->log($e->getMessage());
+            return $username;
         }
     }
 
@@ -199,50 +247,102 @@ AND m.doc_name like ?';
     }
 
     /**
-     * Initiate CAS authentication
+     * Initiate authentication
      *
      * @return string|boolean username of authenticated user (false if not authenticated)
      */
     private function authenticate()
     {
+        $this->framework->initializeJavascriptModuleObject();
+        $clientId    = $this->framework->getSystemSetting('entraid-client-id');
+        $adTenant    = $this->framework->getSystemSetting('entraid-ad-tenant');
+        $redirectUrl = $this->framework->getSystemSetting('entraid-redirect-url');
+        ?>
+        <script src="https://alcdn.msauth.net/browser/2.38.2/js/msal-browser.min.js"
+            integrity="sha384-hhkHFODse2T75wPL7oJ0RZ+0CgRa74LNPhgx6wO6DMNEhU3/fSbTZdVzxsgyUelp"
+            crossorigin="anonymous"></script>
+        <script>
+            var myMsal;
+            function ready(fn) {
+                if (document.readyState !== 'loading') {
+                    fn();
+                    return;
+                }
+                document.addEventListener('DOMContentLoaded', fn);
+            }
+            ready(function () {
+                const module = <?= $this->framework->getJavascriptModuleObjectName() ?>;
+                const config = {
+                    auth: {
+                        clientId: "<?= $clientId ?>",
+                        authority: "https://login.microsoftonline.com/<?= $adTenant ?>",
+                        redirectUri: "<?= $redirectUrl ?>"
+                    }
+                };
 
-        require_once __DIR__ . '/vendor/autoload.php';
+                const loginRequest = {
+                    scopes: ["User.Read"]
+                };
 
-        $cas_host                = $this->framework->getSystemSetting("cas-host");
-        $cas_context             = $this->framework->getSystemSetting("cas-context");
-        $cas_port                = (int) $this->framework->getSystemSetting("cas-port");
-        $cas_server_ca_cert_id   = $this->framework->getSystemSetting("cas-server-ca-cert-pem");
-        $cas_server_ca_cert_path = is_null($cas_server_ca_cert_id) ? null : $this->getFile($cas_server_ca_cert_id);
-        $server_force_https      = $this->framework->getSystemSetting("server-force-https");
-        $server_force_http       = $this->framework->getSystemSetting("server-force-http");
-        $service_base_url        = APP_PATH_WEBROOT_FULL;
+                myMsal = new msal.PublicClientApplication(config);
 
-        // Enable https fix
-        if ( $server_force_https == 1 ) {
-            $_SERVER['HTTP_X_FORWARDED_PROTO'] = 'https';
-            $_SERVER['HTTP_X_FORWARDED_PORT']  = 443;
-            $_SERVER['HTTPS']                  = 'on';
-            $_SERVER['SERVER_PORT']            = 443;
-        } elseif ( $server_force_http == 1 ) {
-            $_SERVER['HTTP_X_FORWARDED_PROTO'] = 'http';
-            $_SERVER['HTTPS']                  = null;
-        }
+                function authenticate(loginResponse) {
+                    const token = loginResponse.accessToken;
+                    module.ajax('authenticate', { token: token })
+                        .then((result) => {
+                            if (result.success) {
+                                window.location.reload();
+                            }
+                        })
+                        .catch((error) => {
+                            console.error(error);
+                        });
+                }
 
-        // Initialize phpCAS
-        \phpCAS::client(CAS_VERSION_2_0, $cas_host, $cas_port, $cas_context, $service_base_url);
+                function singleAccount(account) {
+                    const accessTokenRequest = {
+                        scopes: ["User.Read"],
+                        account: account
+                    }
+                    myMsal
+                        .acquireTokenSilent(accessTokenRequest)
+                        .then(authenticate)
+                        .catch((error) => {
+                            console.log(error);
+                        });
+                }
 
-        // Set the CA certificate that is the issuer of the cert
-        // on the CAS server
-        \phpCAS::setCasServerCACert($cas_server_ca_cert_path);
+                function general() {
+                    myMsal
+                        .loginPopup(loginRequest)
+                        .then(authenticate)
+                        .catch((error) => {
+                            console.log(error);
+                        });
+                }
 
-        // Don't exit, let me handle instead
-        \CAS_GracefullTerminationException::throwInsteadOfExiting();
+                function handleResponse(response) {
+                    const currentAccounts = myMsal.getAllAccounts();
+                    if (currentAccounts.length !== 1) {
+                        general();
+                    } else if (currentAccounts.length === 1) {
+                        const account = currentAccounts[0];
+                        singleAccount(account);
+                    }
+                }
 
-        // force CAS authentication
-        \phpCAS::forceAuthentication();
-
-        // Return authenticated username
-        return \phpCAS::getUser();
+                const currentAccounts = myMsal.getAllAccounts();
+                if (currentAccounts.length > 1) {
+                    general();
+                } else if (currentAccounts.length === 1) {
+                    const account = currentAccounts[0];
+                    singleAccount(account);
+                } else {
+                    myMsal.handleRedirectPromise().then(handleResponse);
+                }
+            });
+        </script>
+        <?php
     }
 
 
@@ -263,22 +363,31 @@ AND m.doc_name like ?';
         return EDOC_PATH . $filename;
     }
 
-    public function login()
+    public function initSession()
     {
-        $this->framework->log('Attempting to log in');
+        $session_id = $_COOKIE[self::SESSION_COOKIE];
+
+        if ( !empty($session_id) && $session_id !== session_id() ) {
+            \Session::destroy(session_id());
+            session_destroy();
+            session_id($session_id);
+        }
+        session_start();
+    }
+
+    public function login() : string
+    {
+        $this->initSession();
+
+        if ( !empty($_SESSION[self::USERNAME_COOKIE]) ) {
+            return $_SESSION[self::USERNAME_COOKIE];
+        }
         try {
-            $id = $this->authenticate();
-        } catch ( \CAS_GracefullTerminationException $e ) {
-            if ( $e->getCode() !== 0 ) {
-                $this->framework->log($e->getMessage());
-            }
+            $this->authenticate();
         } catch ( \Throwable $e ) {
             $this->framework->log($e->getMessage());
         } finally {
-            if ( $id === false || empty($id) ) {
-                $this->framework->log('Could not log in');
-            }
-            return $id;
+            return "";
         }
     }
 
@@ -618,5 +727,18 @@ AND m.doc_name like ?';
             });
         </script>
         <?php
+    }
+
+    /**
+     * Return lower-case version of string input
+     * @param string $string
+     * @return string
+     */
+    public static function toLowerCase(string $string) : string
+    {
+        if ( extension_loaded('mbstring') ) {
+            return mb_strtolower($string);
+        }
+        return strtolower($string);
     }
 }
