@@ -215,7 +215,7 @@ AND m.doc_name like ?';
         $cas_server_ca_cert_path = is_null($cas_server_ca_cert_id) ? null : $this->getFile($cas_server_ca_cert_id);
         $server_force_https      = $this->framework->getSystemSetting("server-force-https");
         $server_force_http       = $this->framework->getSystemSetting("server-force-http");
-        $service_base_url        = APP_PATH_WEBROOT_FULL;
+        $service_base_url        = $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['SERVER_NAME'] . (!in_array($_SERVER['SERVER_PORT'], ["80","443"], true) ? ':' . $_SERVER['SERVER_PORT'] : '');
 
         // Enable https fix
         if ( $server_force_https == 1 ) {
@@ -468,6 +468,12 @@ AND m.doc_name like ?';
                     "mentor_committee_5",
                     "division_chief_name",
                     "departmental_leadership",
+                    "init_email",
+                    "mentor_committee_name_1",
+                    "mentor_committee_name_2",
+                    "mentor_committee_name_3",
+                    "mentor_committee_name_4",
+                    "mentor_committee_name_5",
                     $this->framework->getProjectSetting('current-year-form') . "_complete",
                     $this->framework->getProjectSetting('first-stage-review-form') . "_complete",
                     $this->framework->getProjectSetting('department-leader-review-form') . "_complete"
@@ -505,7 +511,16 @@ AND m.doc_name like ?';
                     "review_type"       => $review_type,
                     "link"              => $link,
                     "status"            => $status,
-                    "status_text"       => $status_text
+                    "status_text"       => $status_text,
+                    "init_email"        => $newRecord["init_email"],
+                    "mentor_name"       => $newRecord["mentor_name"],
+                    "division_chief_name" => $newRecord["division_chief_name"],
+                    "mentor_committee_name_1" => $newRecord["mentor_committee_name_1"],
+                    "mentor_committee_name_2" => $newRecord["mentor_committee_name_2"],
+                    "mentor_committee_name_3" => $newRecord["mentor_committee_name_3"],
+                    "mentor_committee_name_4" => $newRecord["mentor_committee_name_4"],
+                    "mentor_committee_name_5" => $newRecord["mentor_committee_name_5"],
+                    "departmental_leadership" => $newRecord["departmental_leadership"]
                 );
             }
             $alldata = array_unique(array_merge($alldata, $data), SORT_REGULAR);
@@ -526,10 +541,19 @@ AND m.doc_name like ?';
                     <tr>
                         <th>First Name</th>
                         <th>Last Name</th>
+                        <th>Email</th>
                         <th>Department</th>
                         <th>Ladder Track</th>
                         <th>Rank</th>
                         <th>Review Type</th>
+                        <th>Mentor</th>
+                        <th>Division Chief</th>
+                        <th>Mentor Committee 1</th>
+                        <th>Mentor Committee 2</th>
+                        <th>Mentor Committee 3</th>
+                        <th>Mentor Committee 4</th>
+                        <th>Mentor Committee 5</th>
+                        <th>Departmental Leadership</th>
                         <th>Status</th>
                         <th>Link</th>
                     </tr>
@@ -544,6 +568,9 @@ AND m.doc_name like ?';
                             <?= $this->framework->escape($record["init_last_name"]) ?>
                         </td>
                         <td>
+                            <?= $this->framework->escape($record["init_email"]) ?>
+                        </td>
+                        <td>
                             <?= $this->framework->escape($record["init_department"]) ?>
                         </td>
                         <td>
@@ -554,6 +581,30 @@ AND m.doc_name like ?';
                         </td>
                         <td>
                             <?= $this->framework->escape($record["review_type"]) ?>
+                        </td>
+                        <td>
+                            <?= $this->framework->escape($record["mentor_name"]) ?>
+                        </td>
+                        <td>
+                            <?= $this->framework->escape($record["division_chief_name"]) ?>
+                        </td>
+                        <td>
+                            <?= $this->framework->escape($record["mentor_committee_name_1"]) ?>
+                        </td>
+                        <td>
+                            <?= $this->framework->escape($record["mentor_committee_name_2"]) ?>
+                        </td>
+                        <td>
+                            <?= $this->framework->escape($record["mentor_committee_name_3"]) ?>
+                        </td>
+                        <td>
+                            <?= $this->framework->escape($record["mentor_committee_name_4"]) ?>
+                        </td>
+                        <td>
+                            <?= $this->framework->escape($record["mentor_committee_name_5"]) ?>
+                        </td>
+                        <td>
+                            <?= $this->framework->escape($record["departmental_leadership"]) ?>
                         </td>
                         <td>
                             <?= $record["status_text"] ?>
@@ -567,9 +618,25 @@ AND m.doc_name like ?';
             </table>
         </div>
         <script>
+            function getFormattedDateString() {
+                const date = new Date();
+                const d = date.getDate();
+                const m =  date.getMonth();
+                const y = date.getFullYear();
+                return `${y}-${m+1}-${d}`;
+            }
             $(document).ready(function () {
                 $('#dashboard_table').DataTable({
-                    dom: 'rf<"clear">Bti',
+                    // dom: 'rf<"clear">Bti',
+                    layout: {
+                        topStart: 'buttons'
+                    },
+                    columnDefs: [
+                        {
+                            targets: [2,7,8,9,10,11,12,13,14],
+                            className: 'hidden'
+                        }
+                    ],
                     stateSave: true,
                     buttons: [{
                         text: 'Show Complete Reviews',
@@ -596,7 +663,28 @@ AND m.doc_name like ?';
                         action: function () {
                             window.location.reload();
                         }
+                    },
+                    'spacer',
+                    {
+                        extend: 'collection',
+                        text: 'Export',
+                        buttons: [
+                            {
+                                extend: 'csv',
+                                exportOptions: {
+                                    columns: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15],
+                                },
+                                title: 'YSM Annual Review Dashboard - ' + getFormattedDateString()
+                            }, 
+                            {
+                                extend: 'excel',
+                                exportOptions: {
+                                    columns: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15],
+                                },
+                                title: 'YSM Annual Review Dashboard - ' + getFormattedDateString()
+                            }]
                     }
+                    
                     ],
                     initComplete: function (settings, json) {
                         const dt = this.DataTable();
@@ -606,10 +694,11 @@ AND m.doc_name like ?';
                                 return $status != 3 && $status != 7;
                             }
                         );
+                        dt.columns('.hidden').visible(false);
                         dt.draw();
                     },
                     order: [
-                        [6, 'desc']
+                        [15, 'desc']
                     ],
                     paging: false,
                     scrollY: `calc(100vh - 200px)`,
