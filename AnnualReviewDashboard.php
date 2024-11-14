@@ -298,15 +298,15 @@ AND m.doc_name like ?';
         $faculty_completed    = $record[$this->framework->getProjectSetting('current-year-form') . "_complete"] == 2;
         $first_stage_complete = $record[$this->framework->getProjectSetting('first-stage-review-form') . "_complete"] == 2;
         $review_type          = $record["review_type"];
-        $mentor               = strtolower($record["mentor_name"]);
-        $division_chief       = strtolower($record["division_chief_name"]);
-        $chair                = strtolower($record["departmental_leadership"]);
+        $mentor               = AnnualReviewDashboard::toLowerCase($record["mentor_name"]);
+        $division_chief       = AnnualReviewDashboard::toLowerCase($record["division_chief_name"]);
+        $chair                = AnnualReviewDashboard::toLowerCase($record["departmental_leadership"]);
         $mentorship_committee = [
-            strtolower($record["mentor_committee_1"]),
-            strtolower($record["mentor_committee_2"]),
-            strtolower($record["mentor_committee_3"]),
-            strtolower($record["mentor_committee_4"]),
-            strtolower($record["mentor_committee_5"])
+            AnnualReviewDashboard::toLowerCase($record["mentor_committee_1"]),
+            AnnualReviewDashboard::toLowerCase($record["mentor_committee_2"]),
+            AnnualReviewDashboard::toLowerCase($record["mentor_committee_3"]),
+            AnnualReviewDashboard::toLowerCase($record["mentor_committee_4"]),
+            AnnualReviewDashboard::toLowerCase($record["mentor_committee_5"])
         ];
 
         $userIsMentor        = $mentor == $id;
@@ -411,7 +411,7 @@ AND m.doc_name like ?';
             $these_children = $children[$alias_n];
             foreach ( $these_children as $this_child ) {
                 if ( $id == $this_child ) {
-                    array_push($ids, strtolower($alias));
+                    array_push($ids, AnnualReviewDashboard::toLowerCase($alias));
                 }
             }
         }
@@ -488,7 +488,7 @@ AND m.doc_name like ?';
                 $review_type       = $this->getReviewType(
                     $review_type_raw,
                     $id,
-                    strtolower($newRecord["departmental_leadership"])
+                    AnnualReviewDashboard::toLowerCase($newRecord["departmental_leadership"])
                 );
 
                 $status      = $this->getStatus($id, $newRecord);
@@ -618,5 +618,18 @@ AND m.doc_name like ?';
             });
         </script>
         <?php
+    }
+
+    /**
+     * Return lower-case version of string input
+     * @param string $string
+     * @return string
+     */
+    public static function toLowerCase(string $string) : string
+    {
+        if ( extension_loaded('mbstring') ) {
+            return mb_strtolower($string);
+        }
+        return strtolower($string);
     }
 }
