@@ -16,14 +16,11 @@ $id = AnnualReviewDashboard::toLowerCase($id);
 <head>
     <title>YSM Annual Review Dashboard</title>
     <link rel="shortcut icon" type="image" href="<?= $module->framework->getUrl('assets/logos/favicon.ico') ?>" />
-    <script src="https://code.jquery.com/jquery-3.6.0.slim.min.js"
-        integrity="sha256-u7e5khyithlIdTpu22PHhENmPcRdFiHRjhAuHcs05RI=" crossorigin="anonymous">
-        </script>
+    
     <link rel="stylesheet" href="<?= $module->framework->getUrl('lib/FontAwesome/css/all.min.css'); ?>">
-    <link rel="stylesheet" type="text/css"
-        href="<?= $module->framework->getUrl('lib/DataTables/datatables.min.css'); ?>">
-    <script type="text/javascript"
-        src="<?= $module->framework->getUrl('lib/DataTables/datatables.min.js'); ?>"></script>
+    <link href="https://cdn.datatables.net/v/dt/jq-3.7.0/jszip-3.10.1/dt-2.1.8/b-3.2.0/b-colvis-3.2.0/b-html5-3.2.0/sr-1.4.1/datatables.min.css" rel="stylesheet">
+ 
+<script src="https://cdn.datatables.net/v/dt/jq-3.7.0/jszip-3.10.1/dt-2.1.8/b-3.2.0/b-colvis-3.2.0/b-html5-3.2.0/sr-1.4.1/datatables.min.js"></script>
     <style>
         body {
             font-family: 'Avenir Next Regular', Arial, Helvetica, sans-serif;
@@ -35,10 +32,10 @@ $id = AnnualReviewDashboard::toLowerCase($id);
         }
 
         a.dt-button {
-            font-family: Lucida Console;
+            /* font-family: Lucida Console;
             Consolas;
-            padding: 0.5em 0.75em;
-            background-color: #00356b;
+            padding: 0.5em 0.75em; */
+            /* background-color: #00356b; */
         }
 
         img.logo {

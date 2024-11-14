@@ -10,7 +10,7 @@ $projectID = $module->framework->getProjectId();
 if ( !$id ) {
     exit;
 }
-$id = strtolower($id);
+$id = AnnualReviewDashboard::toLowerCase($id);
 
 $record_id = filter_input(INPUT_GET, 'record_id', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
 if ( !isset($record_id) ) {
