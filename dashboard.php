@@ -3,6 +3,7 @@
 namespace YaleREDCap\AnnualReviewDashboard;
 
 /** @var AnnualReviewDashboard $module */
+
 $id = $module->login();
 
 if ( !$id ) {

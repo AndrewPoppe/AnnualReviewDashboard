@@ -27,6 +27,7 @@ function getPdfData($record_id, $id, $type)
 {
     global $module;
     $ids = $module->getValidIDs($id);
+    $module->log('type', [ 'type' => $type ]);
     foreach ( $ids as $thisId ) {
         if ( $type == 1 ) {
             getFirstStagePDF($record_id, $thisId);
