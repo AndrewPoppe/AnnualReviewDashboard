@@ -437,7 +437,10 @@ AND m.doc_name like ?';
             "init_department"   => $this->framework->getChoiceLabels("init_department"),
             "init_ladder_track" => $this->framework->getChoiceLabels("init_ladder_track"),
             "init_rank"         => $this->framework->getChoiceLabels("init_rank"),
-            "review_type"       => $this->framework->getChoiceLabels("review_type")
+            "review_type"       => $this->framework->getChoiceLabels("review_type"),
+            "mentor_name"       => $this->framework->getChoiceLabels("mentor_name"),
+            "division_chief_name" => $this->framework->getChoiceLabels("division_chief_name"),
+            "departmental_leadership" => $this->framework->getChoiceLabels("departmental_leadership"),
         );
 
         foreach ( $ids as $id ) {
@@ -491,6 +494,9 @@ AND m.doc_name like ?';
                 $init_ladder_track = $labels["init_ladder_track"][$newRecord["init_ladder_track"]];
                 $init_rank         = $labels["init_rank"][$newRecord["init_rank"]];
                 $review_type_raw   = $labels["review_type"][$newRecord["review_type"]];
+                $mentor            = $labels["mentor_name"][$newRecord["mentor_name"]];
+                $divisionChief     = $labels["division_chief_name"][$newRecord["division_chief_name"]];
+                $departmentLeader  = $labels["departmental_leadership"][$newRecord["departmental_leadership"]];
                 $review_type       = $this->getReviewType(
                     $review_type_raw,
                     $id,
@@ -513,14 +519,14 @@ AND m.doc_name like ?';
                     "status"            => $status,
                     "status_text"       => $status_text,
                     "init_email"        => $newRecord["init_email"],
-                    "mentor_name"       => $newRecord["mentor_name"],
-                    "division_chief_name" => $newRecord["division_chief_name"],
+                    "mentor_name"       => $mentor,
+                    "division_chief_name" => $divisionChief,
+                    "departmental_leadership" => $departmentLeader,
                     "mentor_committee_name_1" => $newRecord["mentor_committee_name_1"],
                     "mentor_committee_name_2" => $newRecord["mentor_committee_name_2"],
                     "mentor_committee_name_3" => $newRecord["mentor_committee_name_3"],
                     "mentor_committee_name_4" => $newRecord["mentor_committee_name_4"],
-                    "mentor_committee_name_5" => $newRecord["mentor_committee_name_5"],
-                    "departmental_leadership" => $newRecord["departmental_leadership"]
+                    "mentor_committee_name_5" => $newRecord["mentor_committee_name_5"]
                 );
             }
             $alldata = array_unique(array_merge($alldata, $data), SORT_REGULAR);
