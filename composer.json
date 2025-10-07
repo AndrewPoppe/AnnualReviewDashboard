@@ -1,0 +1,10 @@
+{
+    "require": {
+        "apereo/phpcas": "*"
+    },
+    "config": {
+        "platform": {
+            "php": "8.0.00"
+        }
+    }
+}

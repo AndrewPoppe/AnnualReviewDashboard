@@ -28,13 +28,25 @@ function getPdfData($record_id, $id, $type)
     global $module;
     $ids = $module->getValidIDs($id);
     $module->log('type', [ 'type' => $type ]);
+    $result = false;
+    if ($type == 2) {
+        // First check if the user is a departmental leader or their delegate and can access the final review
+        foreach ( $ids as $thisId ) {
+            $result = getFinalPDF($record_id, $thisId);
+            if ( $result ) {
+                return;
+            }
+        }
+    } 
+    // If not, check if they are a mentor or committee member and can access the first stage review
     foreach ( $ids as $thisId ) {
-        if ( $type == 1 ) {
-            getFirstStagePDF($record_id, $thisId);
-        } elseif ( $type == 2 ) {
-            getFinalPDF($record_id, $thisId);
+        $result = getFirstStagePDF($record_id, $thisId);
+        if ( $result ) {
+            return;
         }
     }
+    
+    // If neither, they do not have permission to view the file
     print "You do not have permission to view that file.";
 }
 
@@ -68,7 +80,7 @@ function getFirstStagePDF($record_id, $id)
         // Output the PDF content
         print $pdfcontent;
 
-        exit;
+        return true;
     }
 }
 
@@ -94,7 +106,7 @@ function getFinalPDF($record_id, $id)
         // Output the PDF content
         print $pdfcontent;
 
-        exit;
+        return true;
     }
 }
 

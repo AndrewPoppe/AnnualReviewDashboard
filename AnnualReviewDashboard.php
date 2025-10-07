@@ -389,10 +389,9 @@ AND m.doc_name like ?';
         } else if ( $status == 4 || $status == 5 || $status == 9 ) {
             $survey_link = \REDCap::getSurveyLink($record_id, $this->framework->getProjectSetting('first-stage-review-form'));
             $link        = '<a target="_blank" href="' . $survey_link . '">Start Review</a>';
-        } else if ( $status == 7 ) {
-            $link = "<a href='" . $this->framework->getUrl("download.php?record_id=" . $record_id . "&id=" . $id . "&type=2", true) . "' target='_blank'>Download Review</button>";
-        } else if ( $status == 3 ) {
-            $link = "<a href='" . $this->framework->getUrl("download.php?record_id=" . $record_id . "&id=" . $id . "&type=1", true) . "' target='_blank'>Download Review</button>";
+        } else if ( $status == 7 || $status == 3 ) {
+            $type = $status == 7 ? 2 : 1;
+            $link = "<a href='" . $this->framework->getUrl("download.php?record_id=" . $record_id . "&id=" . $id . "&type=" . $type, true) . "' target='_blank'>Download Review</button>";
         }
         return $link;
     }
