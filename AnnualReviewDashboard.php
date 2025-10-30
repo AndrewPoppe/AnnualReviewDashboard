@@ -57,32 +57,37 @@ class AnnualReviewDashboard extends \ExternalModules\AbstractExternalModule
 
     public function redcap_module_ajax($action, $payload, $project_id, $record, $instrument, $event_id, $repeatInstance, $surveyHash, $responseId, $surveyQueueHash, $page, $pageFull, $userId, $groupId)
     {
-        $projectId = $payload['project_id'];
-        $eventId   = $this->framework->getEventId();
-        if ( $action == "dataImport" ) {
-            $records = $this->getRecords($projectId);
+        if ( $action == "dataImport" ) {    
+            $projectId = $payload['project_id'];
+            $eventId   = $this->framework->getEventId();
+            $this->linkEvaluations($projectId, $eventId);
+        }
+    }
 
-            // Only look for a file if there isn't already one
-            try {
-                $params = array(
-                    'project_id' => $projectId,
-                    'fields'     => 'teaching_evaluations',
-                    'records'    => $records
-                );
-                $data   = \REDCap::getData($params);
-                foreach ( $records as $thisRecord ) {
-                    $evalsExist = !empty($data[(string) $thisRecord] ?? []);
-                    if ( $evalsExist ) {
-                        continue;
-                    }
+    public function linkEvaluations($projectId, $eventId) {
+        $records = $this->getRecords($projectId);
 
-                    // Search for an eval file
-                    $this->findEvalFile($projectId, $thisRecord, $eventId);
+        // Only look for a file if there isn't already one
+        try {
+            $params = array(
+                'project_id' => $projectId,
+                'fields'     => 'teaching_evaluations',
+                'records'    => $records
+            );
+            $data   = \REDCap::getData($params);
+            foreach ( $records as $thisRecord ) {
+                $evalsExist = !empty($data[(string) $thisRecord] ?? []);
+                if ( $evalsExist ) {
+                    continue;
                 }
-            } catch ( \Throwable $e ) {
-                $this->framework->log($e->getMessage());
-                return;
+
+                // Search for an eval file
+                $this->findEvalFile($projectId, $thisRecord, $eventId);
             }
+            return true;
+        } catch ( \Throwable $e ) {
+            $this->framework->log($e->getMessage());
+            return false;
         }
     }
 

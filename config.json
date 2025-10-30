@@ -110,6 +110,13 @@
                 "icon": "fas fa-tachometer-alt",
                 "url": "dashboard.php?NOAUTH",
                 "show-header-and-footer": false
+            },
+            {
+                "name": "Annual Review Dashboard: Link Evaluations",
+                "key": "link-evaluations",
+                "icon": "fas fa-file-download",
+                "url": "link_evaluations.php",
+                "target": "_blank"
             }
         ]
     },
