@@ -28,7 +28,7 @@ class AnnualReviewDashboard extends \ExternalModules\AbstractExternalModule
                 'records'    => array( $record ),
                 'fields'     => 'teaching_evaluations',
             );
-            $evalsExist = sizeof(\REDCap::getData($params));
+            $evalsExist = !empty(\REDCap::getData($params) ?? []);
         } catch ( \Throwable $e ) {
             $this->framework->log($e->getMessage());
             return;
@@ -71,7 +71,7 @@ class AnnualReviewDashboard extends \ExternalModules\AbstractExternalModule
                 );
                 $data   = \REDCap::getData($params);
                 foreach ( $records as $thisRecord ) {
-                    $evalsExist = sizeof($data[(string) $thisRecord]);
+                    $evalsExist = !empty($data[(string) $thisRecord] ?? []);
                     if ( $evalsExist ) {
                         continue;
                     }
